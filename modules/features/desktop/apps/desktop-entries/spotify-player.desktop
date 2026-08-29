@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Spotify Player
+GenericName=Music Player
+Comment=Terminal Spotify Client
+Exec=footclient --app-id=foot.spotify spotify_player
+Icon=spotify
+Terminal=false
+Categories=Audio;Music;Player;AudioVideo;

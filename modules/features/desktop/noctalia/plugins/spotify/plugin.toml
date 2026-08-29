@@ -1,0 +1,32 @@
+id = "local/spotify"
+name = "Spotify Controller"
+version = "1.0.0"
+plugin_api = 3
+author = "yuri"
+icon = "spotify"
+description = "Control Spotify, browse playlists, start radio stations, and search tracks directly from the Noctalia launcher (/spot, /playlist, /radio)."
+dependencies = ["spotify_player", "python3"]
+
+[[launcher_provider]]
+id = "spotify-search"
+entry = "spotify_search.luau"
+prefix = "spot"
+glyph = "music"
+include_in_global_search = false
+debounce_ms = 250
+
+[[launcher_provider]]
+id = "spotify-playlists"
+entry = "spotify_playlists.luau"
+prefix = "playlist"
+glyph = "music"
+include_in_global_search = false
+debounce_ms = 0
+
+[[launcher_provider]]
+id = "spotify-radio"
+entry = "spotify_radio.luau"
+prefix = "radio"
+glyph = "music"
+include_in_global_search = false
+debounce_ms = 250

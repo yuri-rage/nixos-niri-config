@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Vesktop (Discord)
+GenericName=Custom Discord Client
+Comment=Custom Discord client with Vencord plugins and dark theme
+Exec=vesktop %U
+Icon=discord
+Terminal=false
+Categories=Network;InstantMessaging;Chat;
+MimeType=x-scheme-handler/discord;
+Keywords=discord;vencord;electron;chat;
+StartupWMClass=Vesktop

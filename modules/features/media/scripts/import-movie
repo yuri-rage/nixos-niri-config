@@ -1,0 +1,622 @@
+#!/usr/bin/env python3
+"""
+import-movie: Automated Movie Importer for Jellyfin & MakeMKV Remuxes
+
+Features:
+- 100% strict type annotations (0 Any, 0 Unknowns, 0 UnusedResults in basedpyright 'all' mode).
+- Specific exception handling (0 BLE001 Ruff warnings).
+- Clean terminal UI without emojis.
+- Subtitle Header Sanitization: Clears bogus default flags from full dialogue subtitles while preserving real forced translation tracks.
+- Dual Metadata Provider: Zero-auth Cinemeta (IMDb) by default, or TMDb when TMDB_API_KEY is supplied.
+- Auto-detects video resolution (4K, 1080p, 720p, 540p, 480p) via ffprobe or stream heuristics.
+- Live chunked progress bar with real-time transfer speed and ETA for NFS moves.
+- Structures movies into Jellyfin-canonical directories:
+    ~/Videos/Movies/<Title> (<Year>) [imdbid-tt<ID>]/<Title> (<Year>) - [<Quality>].<ext>
+    (or [tmdbid-<ID>] when using TMDb)
+- Fast atomic file relocation when moving within the same media share.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+from dataclasses import dataclass
+from http.client import HTTPResponse
+from pathlib import Path
+from typing import Final, cast
+
+MEDIA_ROOT_DEFAULT: Final[Path] = Path.home() / "Videos" / "Movies"
+BUFFER_CHUNK_SIZE: Final[int] = 32 * 1024 * 1024  # 32 MiB transfer buffer
+
+# Terminal styling constants
+BOLD: Final[str] = "\033[1m"
+GREEN: Final[str] = "\033[32m"
+CYAN: Final[str] = "\033[36m"
+YELLOW: Final[str] = "\033[33m"
+RED: Final[str] = "\033[31m"
+RESET: Final[str] = "\033[0m"
+
+
+@dataclass
+class CLIArguments(argparse.Namespace):
+    """Typed namespace for parsed CLI arguments."""
+    file: Path | None = None
+    title: str | None = None
+    year: str | None = None
+    quality: str | None = None
+    dest: Path = MEDIA_ROOT_DEFAULT
+    api_key: str | None = None
+    dry_run: bool = False
+    force: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class MovieMetadata:
+    """Represents resolved movie metadata from an external provider or manual user input."""
+    title: str
+    year: str
+    id_type: str  # "imdb" or "tmdb"
+    external_id: str | None
+    overview: str = ""
+
+    @property
+    def sanitized_title(self) -> str:
+        """Returns title stripped of illegal filesystem characters."""
+        return re.sub(r'[\/:*?"<>|]', "", self.title).strip()
+
+    @property
+    def folder_name(self) -> str:
+        """Generates the canonical Jellyfin directory name with ID tag."""
+        if self.external_id:
+            tag_name: str = f"{self.id_type}id"
+            return f"{self.sanitized_title} ({self.year}) [{tag_name}-{self.external_id}]"
+        return f"{self.sanitized_title} ({self.year})"
+
+
+@dataclass(frozen=True, slots=True)
+class ImportTask:
+    """Represents a fully validated movie relocation task."""
+    source_path: Path
+    metadata: MovieMetadata
+    quality: str
+
+    @property
+    def target_filename(self) -> str:
+        """Generates the standardized video filename with resolution tag."""
+        extension: str = self.source_path.suffix.lower()
+        return f"{self.metadata.sanitized_title} ({self.metadata.year}) - [{self.quality}]{extension}"
+
+    def get_destination_path(self, root_dir: Path) -> Path:
+        """Computes the full target destination path within the media library."""
+        return root_dir / self.metadata.folder_name / self.target_filename
+
+
+def format_bytes(num_bytes: float) -> str:
+    """Formats raw byte counts into human-friendly binary units."""
+    size: float = float(num_bytes)
+    for unit in ["B", "KB", "MB", "GB", "TB"]:
+        if abs(size) < 1024.0:
+            return f"{size:3.1f} {unit}"
+        size /= 1024.0
+    return f"{size:.1f} PB"
+
+
+def format_duration(seconds: float) -> str:
+    """Formats seconds into clean mm:ss or hh:mm:ss timers."""
+    if seconds < 0 or seconds > 86400:
+        return "--:--"
+    m, s = divmod(int(seconds), 60)
+    h, m = divmod(m, 60)
+    if h > 0:
+        return f"{h:02d}h {m:02d}m {s:02d}s"
+    return f"{m:02d}m {s:02d}s"
+
+
+def move_with_progress_bar(src: Path, dst: Path) -> None:
+    """Relocates file: instantaneous atomic rename on the same filesystem, or live buffered stream across filesystems."""
+    # Check if src and dst reside on the same filesystem (e.g. both on /mnt/media)
+    try:
+        if src.stat().st_dev == dst.parent.stat().st_dev:
+            print(f"\nRelocating on media share ({BOLD}instant atomic move{RESET})...")
+            _ = src.rename(dst)
+            return
+    except OSError:
+        pass
+
+    total_size: int = src.stat().st_size
+    copied_bytes: int = 0
+    start_time: float = time.monotonic()
+    last_update_time: float = 0.0
+
+    print(f"\nTransferring to media library ({BOLD}{format_bytes(float(total_size))}{RESET})...")
+
+    with src.open("rb") as fsrc, dst.open("wb") as fdst:
+        while True:
+            chunk: bytes = fsrc.read(BUFFER_CHUNK_SIZE)
+            if not chunk:
+                break
+            _ = fdst.write(chunk)
+            copied_bytes += len(chunk)
+
+            now: float = time.monotonic()
+            if now - last_update_time >= 0.1 or copied_bytes == total_size:
+                last_update_time = now
+                elapsed: float = max(now - start_time, 0.001)
+                speed: float = copied_bytes / elapsed
+                percent: float = (copied_bytes / total_size) * 100.0 if total_size > 0 else 100.0
+                eta: float = (total_size - copied_bytes) / speed if speed > 0 else 0.0
+
+                bar_width: int = 28
+                filled: int = int((copied_bytes / total_size) * bar_width) if total_size > 0 else bar_width
+                bar_str: str = "█" * filled + "░" * (bar_width - filled)
+
+                status_line: str = (
+                    f"\r  [{CYAN}{bar_str}{RESET}] {BOLD}{percent:5.1f}%{RESET} "
+                    f"({format_bytes(float(copied_bytes))} / {format_bytes(float(total_size))}) • "
+                    f"{YELLOW}{format_bytes(speed)}/s{RESET} • ETA: {format_duration(eta)}   "
+                )
+                _ = sys.stdout.write(status_line)
+                _ = sys.stdout.flush()
+
+    print()
+
+    # Integrity verification before deleting source
+    if dst.stat().st_size != total_size:
+        raise OSError(f"Transfer size mismatch: expected {total_size}, wrote {dst.stat().st_size}")
+
+    src.unlink()
+
+
+def sanitize_subtitle_flags(file_path: Path) -> None:
+    """Clears default flag on non-forced subtitle tracks while preserving forced translations."""
+    if file_path.suffix.lower() != ".mkv":
+        return
+
+    try:
+        cmd: list[str] = [
+            "ffprobe",
+            "-v", "error",
+            "-select_streams", "s",
+            "-show_entries", "stream=index:stream_disposition=default,forced",
+            "-of", "json",
+            str(file_path),
+        ]
+        res: subprocess.CompletedProcess[str] = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if res.returncode != 0 or not res.stdout.strip():
+            return
+
+        raw: object = cast("object", json.loads(res.stdout))
+        if not isinstance(raw, dict):
+            return
+
+        data: dict[str, object] = cast("dict[str, object]", raw)
+        raw_streams: object = data.get("streams")
+        if not isinstance(raw_streams, list) or not raw_streams:
+            return
+
+        streams: list[object] = cast("list[object]", raw_streams)
+        edit_args: list[str] = ["mkvpropedit", str(file_path)]
+        needs_edit: bool = False
+
+        for idx, s_obj in enumerate(streams, start=1):
+            if not isinstance(s_obj, dict):
+                continue
+            s_dict: dict[str, object] = cast("dict[str, object]", s_obj)
+            raw_disp: object = s_dict.get("disposition")
+            if not isinstance(raw_disp, dict):
+                continue
+            disp_dict: dict[str, object] = cast("dict[str, object]", raw_disp)
+            raw_def: object = disp_dict.get("default")
+            is_default: int = 1 if raw_def == 1 or raw_def == "1" else 0
+
+            raw_forced: object = disp_dict.get("forced")
+            is_forced: int = 1 if raw_forced == 1 or raw_forced == "1" else 0
+
+            # If track is marked default but NOT forced, clear the default flag
+            if is_default == 1 and is_forced == 0:
+                edit_args.extend(["--edit", f"track:s{idx}", "--set", "flag-default=0"])
+                needs_edit = True
+
+        if needs_edit:
+            _ = subprocess.run(
+                edit_args,
+                capture_output=True,
+                check=False,
+            )
+    except (subprocess.SubprocessError, OSError, json.JSONDecodeError, ValueError, KeyError):
+        pass
+
+
+def parse_ffprobe_dimensions(json_text: str) -> tuple[int, int] | None:
+    """Safely extracts width and height from ffprobe JSON with zero unknown types."""
+    try:
+        raw: object = cast("object", json.loads(json_text))
+        if not isinstance(raw, dict):
+            return None
+
+        data: dict[str, object] = cast("dict[str, object]", raw)
+        raw_streams: object = data.get("streams")
+        if not isinstance(raw_streams, list) or not raw_streams:
+            return None
+
+        streams: list[object] = cast("list[object]", raw_streams)
+        first_stream: object = streams[0]
+        if not isinstance(first_stream, dict):
+            return None
+
+        stream_data: dict[str, object] = cast("dict[str, object]", first_stream)
+        raw_w: object = stream_data.get("width")
+        raw_h: object = stream_data.get("height")
+        if isinstance(raw_w, (int, str)) and isinstance(raw_h, (int, str)):
+            w: int = int(raw_w)
+            h: int = int(raw_h)
+            if w > 0 and h > 0:
+                return (w, h)
+    except (json.JSONDecodeError, KeyError, IndexError, ValueError, TypeError):
+        return None
+    return None
+
+
+def detect_video_quality(file_path: Path) -> str:
+    """Inspects video stream dimensions via ffprobe or falls back to file heuristics."""
+    try:
+        cmd: list[str] = [
+            "ffprobe",
+            "-v", "error",
+            "-select_streams", "v:0",
+            "-show_entries", "stream=width,height",
+            "-of", "json",
+            str(file_path),
+        ]
+        res: subprocess.CompletedProcess[str] = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if res.returncode == 0:
+            dims: tuple[int, int] | None = parse_ffprobe_dimensions(res.stdout)
+            if dims is not None:
+                w: int = dims[0]
+                h: int = dims[1]
+                if w >= 3840 or h >= 1440:
+                    return "4K"
+                if w >= 1600 or h >= 800:
+                    return "1080p"
+                if w >= 1200 or h >= 680:
+                    return "720p"
+                if h >= 500 or w >= 700:
+                    return "540p"
+                return "480p"
+    except (subprocess.SubprocessError, OSError):
+        pass
+
+    # Heuristic fallback based on filesize and file container extension
+    size_gb: float = file_path.stat().st_size / (1024.0**3)
+    ext: str = file_path.suffix.lower()
+    if ext in {".mkv", ".mp4"}:
+        return "1080p" if size_gb > 2.0 else "720p"
+    return "480p"
+
+
+def search_cinemeta(title: str, year: str | None = None) -> list[MovieMetadata]:
+    """Queries Cinemeta's open movie catalog for instant, zero-auth IMDb metadata."""
+    encoded_query: str = urllib.parse.quote(title)
+    url: str = f"https://v3-cinemeta.strem.io/catalog/movie/top/search={encoded_query}.json"
+
+    req: urllib.request.Request = urllib.request.Request(url, headers={"User-Agent": "Jellyfin-Importer/2.0"})
+    try:
+        response: HTTPResponse = cast(HTTPResponse, urllib.request.urlopen(req, timeout=8))
+        try:
+            body_bytes: bytes = response.read()
+        finally:
+            response.close()
+
+        raw_obj: object = cast("object", json.loads(body_bytes.decode("utf-8")))
+        if not isinstance(raw_obj, dict):
+            return []
+
+        payload: dict[str, object] = cast("dict[str, object]", raw_obj)
+        raw_metas: object = payload.get("metas")
+        if not isinstance(raw_metas, list):
+            return []
+
+        metas_list: list[object] = cast("list[object]", raw_metas)
+        movies: list[MovieMetadata] = []
+        for item_obj in metas_list:
+            if not isinstance(item_obj, dict):
+                continue
+
+            item: dict[str, object] = cast("dict[str, object]", item_obj)
+            raw_title: object = item.get("name")
+            title_str: str = str(raw_title) if raw_title is not None else title
+
+            raw_year: object = item.get("releaseInfo")
+            year_str: str = str(raw_year) if raw_year is not None else (year or "Unknown")
+
+            raw_imdb: object = item.get("imdb_id")
+            imdb_id: str | None = str(raw_imdb) if raw_imdb is not None else None
+
+            raw_desc: object = item.get("description")
+            desc_str: str = str(raw_desc) if raw_desc is not None else ""
+
+            movies.append(
+                MovieMetadata(
+                    title=title_str,
+                    year=year_str,
+                    id_type="imdb",
+                    external_id=imdb_id,
+                    overview=desc_str,
+                )
+            )
+
+        if year:
+            sorted_movies: list[MovieMetadata] = sorted(
+                movies, key=lambda m: (m.year == year, m.title.lower() == title.lower()), reverse=True
+            )
+            return sorted_movies
+
+        return movies
+    except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError) as err:
+        print(f"{YELLOW}[WARN] Cinemeta lookup failed ({err}).{RESET}")
+        return []
+
+
+def search_tmdb(title: str, year: str | None, api_key: str) -> list[MovieMetadata]:
+    """Queries the TMDb movie search endpoint using a user-supplied API key."""
+    encoded_query: str = urllib.parse.quote(title)
+    url: str = f"https://api.themoviedb.org/3/search/movie?api_key={api_key}&query={encoded_query}"
+    if year:
+        url += f"&year={year}"
+
+    req: urllib.request.Request = urllib.request.Request(url, headers={"User-Agent": "Jellyfin-Importer/2.0"})
+    try:
+        response: HTTPResponse = cast(HTTPResponse, urllib.request.urlopen(req, timeout=8))
+        try:
+            body_bytes: bytes = response.read()
+        finally:
+            response.close()
+
+        raw_obj: object = cast("object", json.loads(body_bytes.decode("utf-8")))
+        if not isinstance(raw_obj, dict):
+            return []
+
+        payload: dict[str, object] = cast("dict[str, object]", raw_obj)
+        raw_results: object = payload.get("results")
+        if not isinstance(raw_results, list):
+            return []
+
+        results_list: list[object] = cast("list[object]", raw_results)
+        movies: list[MovieMetadata] = []
+        for item_obj in results_list:
+            if not isinstance(item_obj, dict):
+                continue
+
+            item: dict[str, object] = cast("dict[str, object]", item_obj)
+
+            raw_title: object = item.get("title")
+            title_str: str = str(raw_title) if raw_title is not None else title
+
+            raw_date: object = item.get("release_date")
+            date_str: str = str(raw_date) if raw_date is not None else ""
+            year_str: str = date_str[:4] if len(date_str) >= 4 else (year or "Unknown")
+
+            raw_id: object = item.get("id")
+            tmdb_id: str | None = str(raw_id) if raw_id is not None else None
+
+            raw_overview: object = item.get("overview")
+            overview_str: str = str(raw_overview) if raw_overview is not None else ""
+
+            movies.append(
+                MovieMetadata(
+                    title=title_str,
+                    year=year_str,
+                    id_type="tmdb",
+                    external_id=tmdb_id,
+                    overview=overview_str,
+                )
+            )
+        return movies
+    except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError) as err:
+        print(f"{YELLOW}[WARN] TMDb lookup failed ({err}). Proceeding offline.{RESET}")
+        return []
+
+
+def infer_title_and_year(filename: str) -> tuple[str, str | None]:
+    """Parses raw MakeMKV filename to extract best-guess title and release year."""
+    stem: str = Path(filename).stem
+    # Strip bracketed tags and MakeMKV disc track suffixes
+    clean: str = re.sub(r"\[.*?\]", "", stem).strip(" ._-")
+    clean = re.sub(r"_t\d+$", "", clean, flags=re.IGNORECASE).strip()
+
+    year_match: re.Match[str] | None = re.search(r"[\(\[\s](\d{4})[\)\]\s]?", clean)
+    if year_match:
+        inferred_year: str = year_match.group(1)
+        inferred_title: str = clean[: year_match.start()].strip(" ._-()")
+        return (inferred_title, inferred_year)
+
+    return (clean, None)
+
+
+def prompt_user_selection(matches: list[MovieMetadata]) -> MovieMetadata:
+    """Renders interactive choice menu when multiple search results are found."""
+    print(f"\n{CYAN}Found {len(matches)} potential matches:{RESET}")
+    for idx, match in enumerate(matches[:5], start=1):
+        snippet: str = (match.overview[:80] + "...") if len(match.overview) > 80 else match.overview
+        tag_info: str = f"{match.id_type.upper()}: {match.external_id}" if match.external_id else "No ID"
+        print(f"  {BOLD}[{idx}]{RESET} {GREEN}{match.title}{RESET} ({match.year}) — {CYAN}{tag_info}{RESET}")
+        if snippet:
+            print(f"      \"{snippet}\"")
+
+    default_choice: int = 1
+    user_input: str = input(f"\nSelect match [1-{min(len(matches), 5)}] (default: {default_choice}): ").strip()
+    if user_input.isdigit():
+        parsed_idx: int = int(user_input)
+        if 1 <= parsed_idx <= min(len(matches), 5):
+            return matches[parsed_idx - 1]
+    return matches[default_choice - 1]
+
+
+def build_argument_parser() -> argparse.ArgumentParser:
+    """Configures modern CLI argument parser with flags and options."""
+    parser: argparse.ArgumentParser = argparse.ArgumentParser(
+        prog="import-movie",
+        description="Automated Movie Importer & Metadata Organizer for Jellyfin Media Stores",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  import-movie ~/Videos/Imports/Transformers_t00.mkv
+  import-movie ~/Videos/Imports/PADDINGTON.mkv --title "Paddington" --year 2014
+  import-movie movie.mkv --dry-run
+  import-movie movie.mkv --quality "1080p Remux"
+        """,
+    )
+    _ = parser.add_argument("file", nargs="?", type=Path, help="Path to the ripped movie video file")
+    _ = parser.add_argument("-t", "--title", type=str, help="Movie title override")
+    _ = parser.add_argument("-y", "--year", type=str, help="Movie release year override")
+    _ = parser.add_argument("-q", "--quality", type=str, help="Override detected quality tag (e.g. 1080p, 4K)")
+    _ = parser.add_argument(
+        "-d",
+        "--dest",
+        type=Path,
+        default=MEDIA_ROOT_DEFAULT,
+        help=f"Destination media root (default: {MEDIA_ROOT_DEFAULT})",
+    )
+    _ = parser.add_argument("-k", "--api-key", type=str, help="Optional TMDb API key override")
+    _ = parser.add_argument("-n", "--dry-run", action="store_true", help="Simulate operation without moving files")
+    _ = parser.add_argument("-f", "--force", action="store_true", help="Bypass interactive confirmation prompt")
+    return parser
+
+
+def main() -> None:
+    parser: argparse.ArgumentParser = build_argument_parser()
+    args: CLIArguments = parser.parse_args(namespace=CLIArguments())
+
+    print(f"{BOLD}{CYAN}============================================================{RESET}")
+    print(f"{BOLD}{CYAN}  Jellyfin Movie Importer & Metadata Organizer{RESET}")
+    print(f"{BOLD}{CYAN}============================================================{RESET}")
+
+    # Validate destination mount
+    media_root: Path = args.dest
+    if not media_root.exists() and not args.dry_run:
+        print(f"{RED}[ERROR] Media root '{media_root}' is not accessible.{RESET}")
+        print("   Ensure your NFS/Samba share is mounted (`ls /mnt/media`).")
+        sys.exit(1)
+
+    # 1. Resolve source file
+    source_file: Path | None = args.file
+    if not source_file:
+        raw_input: str = input("Enter path to ripped movie file: ").strip().strip("'\"")
+        if not raw_input:
+            print(f"{RED}[ERROR] No file specified.{RESET}")
+            sys.exit(1)
+        source_file = Path(raw_input).expanduser().resolve()
+    else:
+        source_file = source_file.expanduser().resolve()
+
+    if not source_file.is_file():
+        print(f"{RED}[ERROR] File not found: '{source_file}'{RESET}")
+        sys.exit(1)
+
+    # 2. Inferred Title & Year
+    inferred_title, inferred_year = infer_title_and_year(source_file.name)
+
+    title: str = args.title or ""
+    if not title:
+        prompt_str: str = (
+            f"Movie Title [{GREEN}{inferred_title}{RESET}]: "
+            if inferred_title
+            else "Movie Title: "
+        )
+        user_input_title: str = input(prompt_str).strip()
+        title = user_input_title if user_input_title else inferred_title
+
+    if not title:
+        print(f"{RED}[ERROR] Movie title cannot be empty.{RESET}")
+        sys.exit(1)
+
+    year: str | None = args.year
+    if not year:
+        prompt_str = f"Release Year [{GREEN}{inferred_year or 'optional'}{RESET}]: "
+        user_input_year: str = input(prompt_str).strip()
+        year = user_input_year if user_input_year else inferred_year
+
+    # 3. Detect Quality
+    quality: str = args.quality or detect_video_quality(source_file)
+
+    # 4. Search Metadata (TMDb if API key is provided, otherwise Cinemeta)
+    tmdb_key: str | None = args.api_key or os.environ.get("TMDB_API_KEY")
+    matches: list[MovieMetadata]
+
+    if tmdb_key:
+        print(f"\nSearching TMDb for {BOLD}'{title}'{RESET}" + (f" ({year})" if year else "") + "...")
+        matches = search_tmdb(title, year, tmdb_key)
+        if not matches and year:
+            matches = search_tmdb(title, None, tmdb_key)
+    else:
+        print(f"\nSearching movie metadata for {BOLD}'{title}'{RESET}" + (f" ({year})" if year else "") + "...")
+        matches = search_cinemeta(title, year)
+
+    print(f"Video Quality Tag : {BOLD}[{quality}]{RESET}")
+
+    selected_metadata: MovieMetadata
+    if not matches:
+        print(f"{YELLOW}[WARN] No exact matches found for '{title}'.{RESET}")
+        choice: str = input("Use input title without ID tag? [y/N]: ").strip().lower()
+        if choice != "y":
+            print("Aborted.")
+            sys.exit(0)
+        selected_metadata = MovieMetadata(
+            title=title,
+            year=year or "Unknown",
+            id_type="custom",
+            external_id=None,
+        )
+    elif len(matches) == 1 or args.force:
+        selected_metadata = matches[0]
+    else:
+        selected_metadata = prompt_user_selection(matches)
+
+    # 5. Formulate Import Task
+    task: ImportTask = ImportTask(source_path=source_file, metadata=selected_metadata, quality=quality)
+    dest_path: Path = task.get_destination_path(media_root)
+
+    print(f"\n{BOLD}{CYAN}------------------------------------------------------------{RESET}")
+    print(f"{BOLD}Source File        :{RESET} {source_file}")
+    print(f"{BOLD}Destination Folder :{RESET} {GREEN}{dest_path.parent}{RESET}")
+    print(f"{BOLD}Destination File   :{RESET} {GREEN}{dest_path.name}{RESET}")
+    print(f"{BOLD}{CYAN}------------------------------------------------------------{RESET}")
+
+    if args.dry_run:
+        print(f"\n{YELLOW}[Dry-Run Mode] No files were moved.{RESET}")
+        sys.exit(0)
+
+    if not args.force:
+        confirm: str = input(f"\nProceed with import? [{BOLD}Y/n{RESET}]: ").strip().lower()
+        if confirm in {"n", "no"}:
+            print("Operation cancelled.")
+            sys.exit(0)
+
+    # 6. Execute Relocation with Real-Time Progress Bar
+    dest_path.parent.mkdir(parents=True, exist_ok=True)
+    move_with_progress_bar(source_file, dest_path)
+    sanitize_subtitle_flags(dest_path)
+    print(f"\n{GREEN}[OK] Successfully imported to library!{RESET}")
+    print("Done!")
+
+
+if __name__ == "__main__":
+    main()

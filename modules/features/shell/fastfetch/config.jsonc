@@ -1,0 +1,151 @@
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "logo": {
+    "type": "file-raw",
+    "source": "/etc/xdg/fastfetch/starman.ansi",
+    "width": 50,
+    "height": 32
+  },
+  "display": {
+    "separator": "  "
+  },
+  "modules": [
+    {
+      "type": "custom",
+      "format": " \u001b[1;3;38;2;133;14;18mAttention, all planets of the Solar Federation:\u001b[0m"
+    },
+    {
+      "type": "custom",
+      "format": "\u001b[38;2;190;20;26m┌───────────────────────󰓏───────────────────────┐\u001b[0m"
+    },
+    // *** HARDWARE ***
+    {
+      "type": "host",
+      "key": "  󰇄",
+      "keyColor": "#23349c",
+      "format": "{name}"
+    },
+    {
+      "type": "cpu",
+      "key": "  ",
+      "showPeCoreCount": true,
+      "keyColor": "#26339b"
+    },
+    {
+      "type": "gpu",
+      "detectionMethod": "pci",
+      "key": "  󰢮",
+      "keyColor": "#2a329a"
+    },
+    {
+      "type": "display",
+      "key": "  󰍹",
+      "keyColor": "#2d329a"
+    },
+    {
+      "type": "memory",
+      "key": "  ",
+      "keyColor": "#303199",
+      "format": "\u001b[3;38;2;88;91;112mRAM  \u001b[0m {percentage}\t{used} / {total}"
+    },
+    {
+      "type": "swap",
+      "key": "  󰓡",
+      "keyColor": "#343098",
+      "format": "\u001b[3;38;2;88;91;112mZRAM \u001b[0m {percentage}\t{used} / {total}"
+    },
+    {
+      "type": "disk",
+      "key": "  󰋊",
+      "keyColor": "#372f98",
+      "format": "\u001b[3;38;2;88;91;112mDisk \u001b[0m {size-percentage}\t{size-used} / {size-total}"
+    },
+    {
+      "type": "localip",
+      "key": "  󰲝",
+      "showIpv4": true,
+      "showPrefixLen": false,
+      "keyColor": "#3a2e97"
+    },
+    {
+      "type": "custom",
+      "format": "\u001b[38;2;190;20;26m├───────────────────────󰓏───────────────────────┤\u001b[0m"
+    },
+    // *** SOFTWARE ***
+    {
+      "type": "kernel",
+      "key": "  ",
+      "keyColor": "#3e2e96",
+      "format": "{1} {2}"
+    },
+    {
+      "type": "os",
+      "key": "  ",
+      "keyColor": "#412d95"
+    },
+    {
+      "type": "packages",
+      "key": "  󰏖",
+      "keyColor": "#442c94"
+    },
+    {
+      "type": "wm",
+      "key": "  ",
+      "keyColor": "#472b94"
+    },
+    {
+      "type": "terminal",
+      "key": "  ",
+      "keyColor": "#4b2a93"
+    },
+    {
+      "type": "shell",
+      "key": "  󰞷",
+      "keyColor": "#4e2992"
+    },
+    {
+      "type": "command",
+      "key": "  󰔚",
+      "keyColor": "#512992",
+      "text": "birth_install=$(stat -c %W / 2>/dev/null); [ \"$birth_install\" -le 0 ] 2>/dev/null && birth_install=$(stat -c %Y /nix/var/nix/profiles/system-1-link 2>/dev/null || stat -c %Y /); current=$(date +%s); time_progression=$((current - birth_install)); days_difference=$((time_progression / 86400)); echo $days_difference days",
+      "format": "\u001b[3;38;2;88;91;112mAge  \u001b[0m{1}"
+    },
+    {
+      "type": "command", // NixOS specific snapshot/package age; silent/skipped for other distros
+      "key": "  󰚰",
+      "keyColor": "#532891",
+      "text": "command -v nixos-version >/dev/null 2>&1 || exit 0; ver=$(nixos-version 2>/dev/null); d=$(printf '%s' \"$ver\" | grep -oP '\\.\\K\\d{8}(?=\\.)'); [ -n \"$d\" ] || exit 0; pkg_epoch=$(date -d \"${d:0:4}-${d:4:2}-${d:6:2}\" +%s 2>/dev/null); [ -n \"$pkg_epoch\" ] || exit 0; diff=$(( $(date +%s) - pkg_epoch )); days=$(( diff / 86400 )); if [ $days -eq 0 ]; then echo \"today\"; elif [ $days -eq 1 ]; then echo \"1 day\"; else echo \"${days} days\"; fi",
+      "format": "\u001b[3;38;2;88;91;112mPkgs \u001b[0m{1}"
+    },
+    {
+      "type": "uptime",
+      "key": "  󰔟",
+      "keyColor": "#552891",
+      "format": "\u001b[3;38;2;88;91;112mUp  \u001b[0m {?days}{days} days, {?}{?hours}{hours} hours, {?}{?minutes}{minutes} mins{?}"
+    },
+    {
+      "type": "custom",
+      "format": "\u001b[38;2;190;20;26m├───────────────────────󰓏───────────────────────┤\u001b[0m"
+    },
+    // *** ADDITIONAL INFO ***
+    {
+      "type": "media",
+      "key": "  󰝚",
+      "keyColor": "#582790",
+      "format": "\u001b[3m{artist:-18} • {title:-30}\u001b[0m"
+    },
+    {
+      "type": "custom",
+      "format": "\u001b[38;2;190;20;26m└───────────────────────󰓏───────────────────────┘\u001b[0m"
+    },
+    {
+      "type": "custom",
+      "format": "             \u001b[1;3;38;2;133;14;18mWe have assumed control!\u001b[0m"
+    },
+    {
+      "type": "colors",
+      "paddingLeft": 17,
+      "symbol": "star"
+    }
+  ]
+}
