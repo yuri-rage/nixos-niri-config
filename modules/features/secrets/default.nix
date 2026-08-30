@@ -3,7 +3,7 @@
 #  declarative secrets management via sops-nix
 #
 # provides:
-#   - system: sops decryption for smb-credentials and user ssh-hosts
+#   - system: sops decryption for smb-credentials, user ssh-hosts, and user docker-config
 #
 # required artifacts:
 #   - secrets/secrets.yaml
@@ -52,6 +52,12 @@
             };
             ssh-hosts = {
               path = "/home/${cfg.user}/.config/ssh/hosts.conf";
+              owner = cfg.user;
+              group = "users";
+              mode = "0600";
+            };
+            docker-config = {
+              path = "/home/${cfg.user}/.docker/config.json";
               owner = cfg.user;
               group = "users";
               mode = "0600";

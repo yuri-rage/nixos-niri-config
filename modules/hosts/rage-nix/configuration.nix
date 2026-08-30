@@ -57,6 +57,7 @@
         extraGroups = [
           "wheel"
           "networkmanager"
+          "docker"
           "uinput"
           "video"
           "input"

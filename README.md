@@ -57,6 +57,7 @@ nixcfg/
 │   │   │   ├── default.nix           # Dev aggregator + antigravity-cli & python3
 │   │   │   ├── ardupilot/            # ArduPilot completion hook & dev environment
 │   │   │   ├── direnv/               # Direnv & nix-direnv caching
+│   │   │   ├── docker/               # Container virtualization, weekly autoPrune, docker-compose
 │   │   │   ├── git/                  # Git configuration & productivity aliases
 │   │   │   ├── language-servers/     # LSP binaries (basedpyright, ruff, nil, nixd, etc.)
 │   │   │   ├── nixcfg-tooling/       # Just runner integration, complete-j.sh, 'j' wrapper

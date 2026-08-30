@@ -3,7 +3,7 @@
 #  aggregates all development modules with direct system developer tooling (antigravity-cli, python3)
 #
 # provides:
-#   - system: zed editor, antigravity CLI, python3
+#   - system: zed, docker, direnv, antigravity CLI, python3
 #   - user:   zed, language-servers, direnv, git, nixcfg-tooling, proxmox-remote, ardupilot
 #
 # required artifacts:
@@ -16,6 +16,7 @@
     {
       imports = with self.nixosModules; [
         direnv
+        docker
         zed
       ];
 
