@@ -3,7 +3,7 @@
 #  foundational system services, bootloader defaults, localization, and nix settings
 #
 # provides:
-#   - system: systemd-boot, zramSwap, nix flakes/gc, and system-wide core packages
+#   - system: systemd-boot, zramSwap, nix flakes/gc, printing, avahi mDNS, and core packages
 #
 # required artifacts:
 #   - (none)
@@ -48,6 +48,11 @@
 
       # Essential System Services
       services.printing.enable = true;
+      services.avahi = {
+        enable = true;
+        nssmdns4 = true;
+        openFirewall = true;
+      };
       services.openssh = {
         enable = true;
         settings = {
