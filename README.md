@@ -65,7 +65,7 @@ nixcfg/
 │   │   │   └── zed/                  # Zed editor settings, filetype mappings, LSP configs
 │   │   ├── media/                    # Media stack & storage
 │   │   │   ├── makemkv/              # Optical disc ripping & video transcoding (ffmpeg, mkvtoolnix)
-│   │   │   ├── media-apps/           # Media playback & streaming download utilities (vlc, yt-dlp)
+│   │   │   ├── media-apps/           # Media playback & download utilities (qbittorrent, vlc, yt-dlp)
 │   │   │   ├── scripts/              # Custom import-movie and import-tv Python CLIs & packages
 │   │   │   ├── spotify-player/       # Terminal Spotify client daemon & MPRIS bridge
 │   │   │   └── storage/              # Configurable NFS/SMB automounts & XDG directory bindings

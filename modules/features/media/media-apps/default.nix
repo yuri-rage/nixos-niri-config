@@ -3,7 +3,7 @@
 #  video playback and streaming download utilities
 #
 # provides:
-#   - system: vlc, yt-dlp
+#   - system: qbittorrent, vlc, yt-dlp
 #
 # required artifacts:
 #   - (none)
@@ -14,6 +14,7 @@
     { pkgs, ... }:
     {
       environment.systemPackages = with pkgs; [
+        qbittorrent
         vlc
         yt-dlp
       ];
