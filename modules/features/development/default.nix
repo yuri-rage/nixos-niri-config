@@ -15,6 +15,7 @@
     { pkgs, ... }:
     {
       imports = with self.nixosModules; [
+        direnv
         zed
       ];
 
