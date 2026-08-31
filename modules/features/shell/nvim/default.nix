@@ -7,7 +7,9 @@
 #
 # required artifacts:
 #   - init.lua
-#   - lua/ (plugin configurations and keymaps)
+#   - nvim-pack-lock.json
+#   - assets/logo.txt
+#   - spell/en.utf-8.add
 
 { self, ... }:
 {
@@ -25,6 +27,7 @@
         wl-clipboard # nvim clipboard integration
         fd # Snacks picker & explorer file traversal
         lazygit # Snacks lazygit integration
+        sqlite.out # Snacks picker frecency & history shared library
       ];
       home.sessionVariables = {
         EDITOR = "nvim";
