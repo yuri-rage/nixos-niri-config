@@ -2,13 +2,15 @@
 -- Neovim 0.12 Native Configuration
 -- ==============================================================================
 
+-- ==============================================================================
 -- 1. Core Editor Options
+-- ==============================================================================
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
 
 vim.opt.number = true
 vim.opt.relativenumber = true
-vim.opt.signcolumn = "yes"
+vim.opt.signcolumn = "yes:1"
 vim.opt.cursorline = true
 vim.opt.expandtab = true
 vim.opt.tabstop = 4
@@ -24,9 +26,15 @@ vim.opt.undofile = true
 vim.opt.updatetime = 400
 vim.opt.splitright = true
 vim.opt.splitbelow = true
+vim.o.winborder = "rounded"
+
+-- Treesitter Code Folding
+vim.o.foldmethod = "expr"
+vim.o.foldexpr = "v:lua.vim.treesitter.foldexpr()"
+vim.o.foldlevelstart = 99
 
 -- Native popup completion options
-vim.opt.completeopt = { "menu", "menuone", "noselect", "popup" }
+vim.opt.completeopt = { "menu", "menuone", "noselect", "popup", "fuzzy" }
 
 -- Disable legacy remote plugin providers
 vim.g.loaded_node_provider = 0
@@ -34,19 +42,8 @@ vim.g.loaded_perl_provider = 0
 vim.g.loaded_python3_provider = 0
 vim.g.loaded_ruby_provider = 0
 
--- Custom Spell Dictionary
-local dict_file = vim.fn.stdpath("config") .. "/spell/en.utf-8.add"
-if vim.fn.filereadable(dict_file) == 1 then
-    vim.opt.spellfile = dict_file
-end
+-- Spell options
 vim.opt.spelllang = { "en_us" }
-
-vim.api.nvim_create_autocmd("FileType", {
-    pattern = { "gitcommit", "markdown", "rst" },
-    callback = function()
-        vim.opt_local.spell = true
-    end,
-})
 
 -- ==============================================================================
 -- 2. Native Package Management (vim.pack)
@@ -59,6 +56,7 @@ vim.pack.add({
 
     -- Modals & Pickers
     { src = "https://github.com/folke/snacks.nvim", name = "snacks" },
+    { src = "https://github.com/folke/which-key.nvim", name = "which-key" },
 
     -- File Management & Editing
     { src = "https://github.com/stevearc/oil.nvim", name = "oil" },
@@ -74,7 +72,7 @@ vim.pack.add({
 }, { confirm = false })
 
 -- ==============================================================================
--- 3. Plugin Setup & Theming
+-- 3. UI & Plugin Setup
 -- ==============================================================================
 local function warn(name, err)
     vim.schedule(function()
@@ -94,12 +92,54 @@ local function setup(name, opts)
     return mod
 end
 
+-- 3.1 Gutter & Statuscolumn (3-Part: [Git Change Bar] [Diagnostic Sign] [Line Number])
+_G.StatusColumn = function()
+    if vim.bo.buftype ~= "" or vim.bo.filetype == "oil" or vim.bo.filetype == "help" then
+        return "%s%l "
+    end
+    local lnum = vim.v.lnum
+    local bufnr = vim.api.nvim_get_current_buf()
+
+    -- 1. Dedicated Git Sign (far left, rendered by gitsigns %s)
+    local git = "%s"
+
+    -- 2. Dedicated Diagnostic Column (middle, fixed width, highest severity wins)
+    local diag = "  "
+    local diags = vim.diagnostic.get(bufnr, { lnum = lnum - 1 })
+    if #diags > 0 then
+        local best = diags[1].severity
+        for _, d in ipairs(diags) do
+            if d.severity < best then
+                best = d.severity
+            end
+        end
+
+        if best == vim.diagnostic.severity.ERROR then
+            diag = "%#DiagnosticSignError# %*"
+        elseif best == vim.diagnostic.severity.WARN then
+            diag = "%#DiagnosticSignWarn# %*"
+        elseif best == vim.diagnostic.severity.HINT then
+            diag = "%#DiagnosticSignHint#󰌵 %*"
+        elseif best == vim.diagnostic.severity.INFO then
+            diag = "%#DiagnosticSignInfo# %*"
+        end
+    end
+
+    -- 3. Line Number (right-aligned, next to code)
+    local num = vim.v.relnum == 0 and lnum or vim.v.relnum
+    local num_str = string.format("%%=%2d ", num)
+
+    return git .. diag .. num_str
+end
+vim.o.statuscolumn = "%!v:lua.StatusColumn()"
+
+-- 3.2 Colorscheme (Catppuccin Mocha)
 if setup("catppuccin", {
     flavour = "mocha",
     transparent_background = true,
     integrations = {
         gitsigns = true,
-        lualine = true,
+        lualine = {},
         snacks = true,
         treesitter = true,
     },
@@ -112,6 +152,7 @@ if setup("catppuccin", {
     vim.cmd.colorscheme("catppuccin-mocha")
 end
 
+-- 3.3 Statusline (Lualine)
 setup("lualine", {
     options = {
         theme = "auto",
@@ -121,6 +162,7 @@ setup("lualine", {
     },
 })
 
+-- 3.4 File Browser (Oil.nvim)
 setup("oil", {
     default_file_explorer = true,
     view_options = { show_hidden = true },
@@ -132,7 +174,7 @@ setup("oil", {
     },
 })
 
--- Treesitter main branch API (native per-buffer highlighting + indent)
+-- 3.5 Syntax & Treesitter
 local ts = setup("nvim-treesitter", {})
 if ts then
     pcall(ts.install, {
@@ -154,11 +196,16 @@ if ts then
     })
 end
 
+-- 3.6 Git Integration (Gitsigns)
 setup("gitsigns", {
     current_line_blame = true,
-    current_line_blame_opts = { delay = 500 },
+    current_line_blame_opts = {
+        delay = 400,
+        virt_text_pos = "right_align",
+    },
 })
 
+-- 3.7 Editing Helpers & Spell Checking
 setup("nvim-autopairs", {})
 
 setup("nvim-highlight-colors", {
@@ -176,6 +223,19 @@ setup("todo-comments", {
     colors = { todo = { "#fd9353" } },
 })
 
+local spell_file = vim.fn.stdpath("config") .. "/spell/en.utf-8.add"
+if vim.fn.filereadable(spell_file) == 1 then
+    vim.opt.spellfile = spell_file
+end
+
+vim.api.nvim_create_autocmd("FileType", {
+    pattern = { "gitcommit", "markdown", "rst" },
+    callback = function()
+        vim.opt_local.spell = true
+    end,
+})
+
+-- 3.8 Modals & Pickers (Snacks)
 local logo_path = vim.fn.stdpath("config") .. "/assets/logo.txt"
 local logo = vim.fn.filereadable(logo_path) == 1 and vim.fn.readfile(logo_path) or {}
 
@@ -228,66 +288,41 @@ setup("snacks", {
     quickfile = { enabled = true },
     scope = { enabled = true },
     scroll = { enabled = true },
-    statuscolumn = { enabled = true },
+    statuscolumn = { enabled = false },
     words = { enabled = true },
 })
 
+setup("which-key", {
+    preset = "helix",
+})
+
+-- 3.9 Highlight Accents & Transparency
+vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
+vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
+vim.api.nvim_set_hl(0, "SnacksDashboardHeader", { fg = "#46b6d2" })
+
 -- ==============================================================================
--- 4. Native LSP & Native Completion (Neovim 0.12)
+-- 4. Native LSP (Neovim 0.12)
 -- ==============================================================================
+
+-- 4.1 Diagnostics Configuration
 vim.diagnostic.config({
-    virtual_text = { spacing = 4, prefix = "◆" },
-    signs = {
-        text = {
-            [vim.diagnostic.severity.ERROR] = "",
-            [vim.diagnostic.severity.WARN]  = "",
-            [vim.diagnostic.severity.HINT]  = "󰌵",
-            [vim.diagnostic.severity.INFO]  = "",
-        },
+    virtual_text = {
+        current_line = true,
+        spacing = 4,
+        prefix = "◆",
     },
+    signs = false,
     underline = true,
     update_in_insert = false,
     severity_sort = true,
 })
 
--- Attach native LSP autocompletion and inlay hints
-vim.api.nvim_create_autocmd("LspAttach", {
-    callback = function(args)
-        local bufnr = args.buf
-        local client = vim.lsp.get_client_by_id(args.data.client_id)
-        if not client then return end
-
-        -- Enable native auto-trigger completion (replaces blink.cmp / nvim-cmp)
-        vim.lsp.completion.enable(true, client.id, bufnr, { autotrigger = true })
-
-        -- Enable inlay hints if supported
-        if client:supports_method("textDocument/inlayHint", { bufnr = bufnr }) then
-            if vim.lsp.inlay_hint and vim.lsp.inlay_hint.enable then
-                vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
-            end
-        end
-    end,
-})
-
--- Format on save
-vim.api.nvim_create_autocmd("BufWritePre", {
-    callback = function(args)
-        vim.lsp.buf.format({ bufnr = args.buf, async = false, timeout_ms = 3000 })
-    end,
-})
-
--- Automatic diagnostic popup on cursor rest
-vim.api.nvim_create_autocmd("CursorHold", {
-    callback = function()
-        vim.diagnostic.open_float(nil, { focusable = false, border = "rounded", scope = "cursor" })
-    end,
-})
-
--- Server specific settings & Inlay Hints
+-- 4.2 Server Specific Settings
 vim.lsp.config("harper_ls", {
     settings = {
         ["harper-ls"] = {
-            userDictPath = dict_file,
+            userDictPath = vim.fn.stdpath("config") .. "/spell/en.utf-8.add",
             linters = { ToDoHyphen = false },
         },
     },
@@ -301,6 +336,16 @@ vim.lsp.config("lua_ls", {
                 setType = true,
                 paramType = true,
                 paramName = "All",
+            },
+            diagnostics = {
+                globals = { "vim", "Snacks" },
+            },
+            workspace = {
+                checkThirdParty = false,
+                library = {
+                    vim.env.VIMRUNTIME,
+                    "${3rd}/luv/library",
+                },
             },
         },
     },
@@ -325,7 +370,7 @@ vim.lsp.config("clangd", {
     cmd = { "clangd", "--inlay-hints" },
 })
 
--- Enable all language servers natively
+-- 4.3 Enable Language Servers
 vim.lsp.enable({
     "clangd",
     "basedpyright",
@@ -340,41 +385,68 @@ vim.lsp.enable({
     "harper_ls",
 })
 
+-- 4.4 LSP Attach Handlers (Completion & Inlay Hints)
+vim.api.nvim_create_autocmd("LspAttach", {
+    callback = function(args)
+        local bufnr = args.buf
+        local client = vim.lsp.get_client_by_id(args.data.client_id)
+        if not client then return end
+
+        -- Enable native auto-trigger completion
+        vim.lsp.completion.enable(true, client.id, bufnr, { autotrigger = true })
+
+        -- Enable inlay hints if supported
+        if client:supports_method("textDocument/inlayHint", bufnr) then
+            vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+        end
+    end,
+})
+
+-- 4.5 Buffer Lifecycle Autocmds (Format on Save & Diagnostic Float)
+vim.api.nvim_create_autocmd("BufWritePre", {
+    callback = function(args)
+        vim.lsp.buf.format({ bufnr = args.buf, async = false, timeout_ms = 3000 })
+    end,
+})
+
+vim.api.nvim_create_autocmd("CursorHold", {
+    callback = function()
+        vim.diagnostic.open_float(nil, { focusable = false, scope = "cursor" })
+    end,
+})
+
 -- ==============================================================================
 -- 5. Keymaps & Ergonomics
 -- ==============================================================================
 local map = vim.keymap.set
 
--- Disable Ex mode & clear search
+-- General & Search
 map("n", "Q", "<nop>", { desc = "Disable Ex mode" })
 map("n", "<Esc>", "<cmd>nohlsearch<CR>", { desc = "Clear search on ESC" })
-
--- Fast file write & quit
 map("n", "<leader>w", "<cmd>w<CR>", { desc = "Write buffer" })
 map("n", "<leader>q", "<cmd>confirm q<CR>", { desc = "Quit buffer / window" })
+map("n", "<leader>s", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], { desc = "Global replace word under cursor" })
 
--- System clipboard & register preservation
+-- System Clipboard & Register Preservation
 map({ "n", "v" }, "<leader>y", '"+y', { desc = "Yank to system clipboard" })
 map({ "n", "v" }, "<leader>Y", '"+Y', { desc = "Yank to EOL (system clipboard)" })
 map({ "n", "v" }, "<leader>d", '"_d', { desc = "Delete (no yank)" })
 map("x", "<leader>p", '"_dP', { desc = "Paste (no yank)" })
 
--- Move visual blocks up/down
+-- Visual Block Movement
 map("v", "K", ":m '<-2<CR>gv=gv", { desc = "Move visual block up" })
 map("v", "J", ":m '>+1<CR>gv=gv", { desc = "Move visual block down" })
 
--- Global search & replace word under cursor
-map("n", "<leader>s", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], { desc = "Global replace word under cursor" })
-
--- Oil.nvim floating filesystem manager
+-- File Management & Packages
 map("n", "<leader>oi", "<cmd>Oil --float<CR>", { desc = "Edit filesystem (Oil)" })
+map("n", "<leader>pu", vim.pack.update, { desc = "Update plugins (vim.pack)" })
 
 -- Snacks Pickers & Modals
 map("n", "<leader><Space>", function() Snacks.picker.files({}) end, { desc = "Find files" })
 map("n", "<leader>gl", function() Snacks.picker.git_log({}) end, { desc = "Git Log" })
 map("n", "<leader>kb", function() Snacks.picker.keymaps({}) end, { desc = "Keymaps" })
 map("n", "<leader>lg", function() Snacks.lazygit() end, { desc = "Open lazygit" })
-map("n", "<leader>tt", function()
+map("n", "<leader>st", function()
     Snacks.picker.grep({
         prompt = " ",
         search = [[(?i)(^|\s+)TODO:?\s]],
@@ -388,22 +460,33 @@ map("n", "<leader>tt", function()
         show_empty = true,
         supports_live = false,
     })
-end, { desc = "Find to-do tasks" })
+end, { desc = "Search to-do tasks" })
 
--- LSP Keymaps
+-- Toggles & UI Switches (Snacks.toggle + Which-Key)
+Snacks.toggle.inlay_hints():map("<leader>th")
+Snacks.toggle.diagnostics():map("<leader>td")
+Snacks.toggle.treesitter():map("<leader>tT")
+Snacks.toggle.option("wrap", { name = "Word Wrap" }):map("<leader>tw")
+Snacks.toggle.option("spell", { name = "Spell Check" }):map("<leader>ts")
+Snacks.toggle.option("relativenumber", { name = "Relative Numbers" }):map("<leader>tr")
+Snacks.toggle.new({
+    name = "Git Blame Line",
+    get = function()
+        local ok, gs = pcall(require, "gitsigns.config")
+        return ok and gs.config.current_line_blame or false
+    end,
+    set = function(state)
+        local ok, gs = pcall(require, "gitsigns")
+        if ok then gs.toggle_current_line_blame(state) end
+    end,
+}):map("<leader>tb")
+
+-- LSP Navigation & Actions
 map("n", "<leader>gf", function() vim.lsp.buf.format({ async = false, timeout_ms = 5000 }) end, { desc = "Format file" })
 map("n", "<leader>gd", function() vim.lsp.buf.definition() end, { desc = "Go to definition" })
 map("n", "<leader>gr", function() vim.lsp.buf.references() end, { desc = "Find references" })
 map("n", "<leader>ca", function() vim.lsp.buf.code_action() end, { desc = "Code action" })
-map("n", "K", function() vim.lsp.buf.hover({ border = "rounded" }) end, { desc = "Inspect symbol under cursor" })
-map("n", "<leader>k", function() vim.lsp.buf.hover({ border = "rounded" }) end, { desc = "Inspect symbol (no Shift)" })
-map({ "n", "i" }, "<C-k>", function() vim.lsp.buf.signature_help({ border = "rounded" }) end, { desc = "Function signature help" })
-map("n", "<leader>th", function()
-    vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
-end, { desc = "Toggle inlay hints" })
+map("n", "K", vim.lsp.buf.hover, { desc = "Inspect symbol under cursor" })
+map("n", "<leader>k", vim.lsp.buf.hover, { desc = "Inspect symbol (no Shift)" })
+map({ "n", "i" }, "<C-k>", vim.lsp.buf.signature_help, { desc = "Function signature help" })
 map("i", "<C-Space>", "<C-x><C-o>", { desc = "Trigger LSP completion" })
-
--- Transparent background accents
-vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
-vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
-vim.api.nvim_set_hl(0, "SnacksDashboardHeader", { fg = "#46b6d2" })
