@@ -17,20 +17,23 @@
       environment.systemPackages = with pkgs; [
         clinfo
         pciutils
+        nvtopPackages.nvidia
       ];
 
-      # AMD GPU & Graphics Acceleration
+      # NVIDIA GPU & Graphics Acceleration
+      services.xserver.videoDrivers = [ "nvidia" ];
+
       hardware.enableRedistributableFirmware = true;
       hardware.graphics = {
         enable = true;
         enable32Bit = true;
-        extraPackages = with pkgs; [
-          rocmPackages.clr.icd
-          rocmPackages.clr
-          rocmPackages.rocminfo
-          libva
-          libva-utils
-        ];
+      };
+
+      hardware.nvidia = {
+        modesetting.enable = true;
+        open = true; # Open-source kernel modules (GSP firmware), supported on modern kernels
+        powerManagement.enable = false;
+        nvidiaSettings = false; # Headless / pure Wayland clean
       };
 
       # Realtime Audio Scheduling Priority

@@ -1,6 +1,6 @@
-debug {
-    render-drm-device "/dev/dri/renderD128"
-}
+// debug {
+//     render-drm-device "/dev/dri/renderD128"
+// }
 
 output "HDMI-A-2" {
     off
