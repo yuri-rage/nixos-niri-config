@@ -32,6 +32,7 @@
       wsl = {
         enable = true;
         defaultUser = "yuri";
+        interop.register = true;
         wslConf.network.hostname = "voodoo-nix";
       };
 
