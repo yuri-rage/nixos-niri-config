@@ -1,6 +1,7 @@
 nixcfg_dir := env('HOME') / 'nixcfg'
 host := `hostname -s`
 user := `whoami`
+home_target := if host == "rage-nix" { user } else { user + "@" + host }
 
 # Display available recipes
 default:
@@ -21,35 +22,35 @@ secrets:
     @nix-shell -p sops --run "sops {{ nixcfg_dir }}/secrets/secrets.yaml"
 
 # Rebuild & switch system and home (NixOS system first, then Home Manager)
-switch host=host user=user: stage
+switch host=host home_target=home_target: stage
     @echo "=== Activating NixOS System ({{ host }}) ==="
     sudo nixos-rebuild switch --flake {{ nixcfg_dir }}#{{ host }}
-    @echo "=== Activating Home Manager ({{ user }}) ==="
-    home-manager switch --flake {{ nixcfg_dir }}#{{ user }}
+    @echo "=== Activating Home Manager ({{ home_target }}) ==="
+    home-manager switch --flake {{ nixcfg_dir }}#{{ home_target }}
 
 # Rebuild & switch NixOS system
 switch-host host=host: stage
     sudo nixos-rebuild switch --flake {{ nixcfg_dir }}#{{ host }}
 
 # Rebuild & switch Home Manager
-switch-home user=user: stage
-    home-manager switch --flake {{ nixcfg_dir }}#{{ user }}
+switch-home host=host home_target=home_target: stage
+    home-manager switch --flake {{ nixcfg_dir }}#{{ home_target }}
 
 # Dry-build system and home configurations
-build host=host user=user: stage
-    @echo "Building Home Manager for {{ user }}..."
-    home-manager build --no-out-link --flake {{ nixcfg_dir }}#{{ user }}
+build host=host home_target=home_target: stage
+    @echo "Building Home Manager for {{ home_target }}..."
+    home-manager build --no-out-link --flake {{ nixcfg_dir }}#{{ home_target }}
     @echo "Building NixOS System for {{ host }}..."
     nixos-rebuild build --no-link --flake {{ nixcfg_dir }}#{{ host }}
     @echo "Build successful!"
 
 # Show package diff between current system/home and new build
-diff host=host user=user: stage
+diff host=host home_target=home_target: stage
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "=== Home Manager Closure Diff ({{ user }}) ==="
+    echo "=== Home Manager Closure Diff ({{ home_target }}) ==="
     current_hm=$(readlink -f ~/.local/state/nix/profiles/home-manager 2>/dev/null || readlink -f /nix/var/nix/profiles/per-user/{{ user }}/home-manager || true)
-    new_hm=$(nix build {{ nixcfg_dir }}#homeConfigurations.{{ user }}.activationPackage --no-link --print-out-paths)
+    new_hm=$(nix build {{ nixcfg_dir }}#homeConfigurations."{{ home_target }}".activationPackage --no-link --print-out-paths)
     if [[ -n "$current_hm" && -n "$new_hm" ]]; then
         nix store diff-closures "$current_hm" "$new_hm" || true
     fi
