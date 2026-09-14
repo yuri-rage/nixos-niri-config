@@ -1,14 +1,7 @@
-// debug {
-//     render-drm-device "/dev/dri/renderD128"
-// }
-
-output "HDMI-A-2" {
-    off
+debug {
+    render-drm-device "/dev/dri/renderD128"
 }
 
-output "Virtual-1" {
-    off
-}
 
 output "DP-1" {
     mode "3440x1440@99.998"

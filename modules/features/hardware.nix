@@ -32,6 +32,7 @@
       hardware.nvidia = {
         modesetting.enable = true;
         open = true; # Open-source kernel modules (GSP firmware), supported on modern kernels
+        nvidiaPersistenced = true;
         powerManagement.enable = false;
         nvidiaSettings = false; # Headless / pure Wayland clean
       };

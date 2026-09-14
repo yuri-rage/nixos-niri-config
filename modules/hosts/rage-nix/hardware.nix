@@ -42,7 +42,12 @@
         "sd_mod"
         "sr_mod"
       ];
-      boot.initrd.kernelModules = [ ];
+      boot.initrd.kernelModules = [
+        "nvidia"
+        "nvidia_modeset"
+        "nvidia_uvm"
+        "nvidia_drm"
+      ];
       boot.extraModulePackages = [ ];
 
       fileSystems."/" = {

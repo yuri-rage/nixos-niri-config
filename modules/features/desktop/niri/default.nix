@@ -54,6 +54,13 @@
             };
         };
 
+        systemd.services.greetd = lib.mkIf (cfg.autoLoginUser != null) {
+          serviceConfig = {
+            Restart = "on-failure";
+            RestartSec = "1s";
+          };
+        };
+
         xdg.portal = {
           enable = true;
           extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
