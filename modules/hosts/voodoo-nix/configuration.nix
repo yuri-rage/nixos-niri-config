@@ -22,7 +22,11 @@
         self.nixosModules.fastfetch
         self.nixosModules.starship
         self.nixosModules.dev
+        self.nixosModules.secrets
       ];
+
+      # Secrets user configuration
+      rage.secrets.user = "yuri";
 
       # WSL Integration
       wsl = {

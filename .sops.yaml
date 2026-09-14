@@ -1,9 +1,11 @@
 keys:
   - &host_rage age1qwfmyts5elr9sudwsv5uagss59uf7gs9nnkm0r67ag46a5v9m4hsrsz4tj
+  - &host_voodoo age1jrrx8ly5rr25nlt4qt2jwqanpun2cs44hhesayl5hru9uwxc3snqj6vjmy
   - &user_yuri age1ueh4fwxsjkzjzh2f4x99kdfmqm65d2yveyfqpu9nkur899ajtfds3kla2q
 creation_rules:
   - path_regex: secrets/[^/]+\.yaml$
     key_groups:
       - age:
           - *host_rage
+          - *host_voodoo
           - *user_yuri
