@@ -7,7 +7,8 @@
     "height": 32
   },
   "display": {
-    "separator": "  "
+    "separator": "  ",
+    "brightColor": false
   },
   "modules": [
     {
