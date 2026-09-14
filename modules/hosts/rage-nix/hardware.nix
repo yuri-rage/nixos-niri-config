@@ -77,6 +77,7 @@
       boot.kernelParams = [
         "console=tty0"
         "console=ttyS0,115200"
+        "pcie_aspm=off"
         "video=DP-1:e"
         "drm.edid_firmware=DP-1:edid/mag341cq.bin"
       ];

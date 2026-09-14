@@ -27,5 +27,11 @@
         capSysAdmin = true;
         openFirewall = true;
       };
+
+      # High-performance UDP socket buffers for high-bitrate streaming
+      boot.kernel.sysctl = {
+        "net.core.rmem_max" = 16777216; # 16 MB
+        "net.core.wmem_max" = 16777216; # 16 MB
+      };
     };
 }
