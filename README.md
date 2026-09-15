@@ -126,6 +126,33 @@ All system operations are unified under **`just`** with a global alias **`j`** a
 
 ---
 
+## Secrets Management
+
+Secrets (`smb-credentials`, `ssh-hosts`, `docker-config`) are encrypted at rest in [`secrets/secrets.yaml`](./secrets/secrets.yaml) using [sops-nix](https://github.com/Mic92/sops-nix) with recipient policies defined in [`.sops.yaml`](./.sops.yaml).
+
+### Dual-Key Architecture
+
+* **Host SSH Keys (`/etc/ssh/ssh_host_ed25519_key`)**: Used by `sops-nix` for unattended machine-level decryption at boot and during `nixos-rebuild switch`. Recipient keys in `.sops.yaml` are derived via `ssh-to-age < /etc/ssh/ssh_host_ed25519_key.pub`.
+* **User Age Key (`~/.config/sops/age/keys.txt`)**: Identity key (`user_yuri`) used to decrypt, view, and edit secrets interactively via `j secrets` (`sops`).
+
+> [!IMPORTANT]
+> When provisioning or reinstalling any host, its matching private SSH key **must** be placed at `/etc/ssh/ssh_host_ed25519_key` (mode `0600`) **before** running the initial `sudo nixos-rebuild switch`. If missing, `sops-nix` activation will fail to decrypt secrets.
+
+### Onboarding a New Host
+
+To authorize a new host to decrypt repository secrets:
+```bash
+# 1. Derive the Age recipient from the new machine's SSH host key:
+ssh-to-age < /etc/ssh/ssh_host_ed25519_key.pub
+
+# 2. Add the host key and recipient alias to .sops.yaml
+
+# 3. Re-encrypt secrets for all recipients (from a machine with the user Age key):
+sops updatekeys secrets/secrets.yaml
+```
+
+---
+
 ## Hotkeys & Shortcuts
 
 ### Niri Window Manager
