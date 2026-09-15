@@ -70,27 +70,36 @@ wsl --install --from-file .\nixos.wsl --name voodoo-nix
 ```
 *Windows will install the distribution and automatically drop you directly into the new instance at the `nixos` shell prompt.*
 
-### 2. Clone Repository
+### 2. Provision Secret Keys
+`sops-nix` runs during system activation and requires the host private key to decrypt secrets (`smb-credentials`, `ssh-hosts`, etc.). Copy the SSH host key into place before building:
+
+```bash
+# Copy the host private SSH key (matching host_voodoo in .sops.yaml) from Windows:
+sudo cp /mnt/c/path/to/ssh_host_ed25519_key /etc/ssh/ssh_host_ed25519_key
+sudo chmod 600 /etc/ssh/ssh_host_ed25519_key
+```
+
+### 3. Clone Repository
 From the active prompt inside the instance, clone the repository via an ephemeral `nix-shell`:
 ```bash
 nix-shell -p git --run "git clone https://github.com/yuri-rage/nixos-niri-config.git ~/nixcfg"
 ```
 
-### 3. Initial System Bootstrap
+### 4. Initial System Bootstrap
 Build and activate the initial NixOS system configuration directly referencing the `nixcfg` flake:
 ```bash
 sudo nixos-rebuild switch --flake ~/nixcfg#voodoo-nix
 ```
-*This build declaratively creates the `yuri` user and `/home/yuri`, sets `wsl.defaultUser = "yuri"` for Windows autologin, sets the hostname to `voodoo-nix`, and installs `home-manager`.*
+*This build declaratively creates the `yuri` user and `/home/yuri`, decrypts secrets via `sops-nix`, sets `wsl.defaultUser = "yuri"` for Windows autologin, sets the hostname to `voodoo-nix`, and installs `home-manager`.*
 
-### 4. Move Repository to `/home/yuri`
+### 5. Move Repository to `/home/yuri`
 Relocate the cloned repository into `yuri`'s newly created home directory and transfer ownership:
 ```bash
 sudo mv ~/nixcfg /home/yuri/nixcfg
 sudo chown -R yuri:users /home/yuri/nixcfg
 ```
 
-### 5. Restart WSL Session
+### 6. Restart WSL Session
 Exit the session and restart the distribution from Windows PowerShell to apply the new default user:
 ```powershell
 exit
@@ -99,16 +108,20 @@ wsl -d voodoo-nix
 ```
 *WSL will now automatically log in directly as `yuri@voodoo-nix` in `/home/yuri`.*
 
-### 6. Provision Secrets & Activate Home Manager
+### 7. Clean Up `nixos` & Activate Home Manager
 Now inside WSL as `yuri`:
 ```bash
-cd ~/nixcfg
+# Remove leftover installer home directory and account:
+sudo rm -rf /home/nixos
+sudo userdel nixos
 
-# Provision the age key for SOPS decryption (if using encrypted secrets):
+# (Optional) Provision user Age key for SOPS CLI / 'j secrets' editing:
 mkdir -p ~/.config/sops/age
-# Copy your age key into ~/.config/sops/age/keys.txt
+cp /mnt/c/path/to/keys.txt ~/.config/sops/age/keys.txt
+chmod 600 ~/.config/sops/age/keys.txt
 
 # Build and activate the initial Home Manager configuration:
+cd ~/nixcfg
 home-manager switch --flake ~/nixcfg#yuri@voodoo-nix
 
 # Reload your shell to source the newly generated aliases and completions:
