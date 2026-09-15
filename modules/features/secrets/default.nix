@@ -41,6 +41,12 @@
       };
 
       config = {
+        systemd.tmpfiles.rules = [
+          "d /home/${cfg.user}/.config 0755 ${cfg.user} users -"
+          "d /home/${cfg.user}/.config/ssh 0700 ${cfg.user} users -"
+          "d /home/${cfg.user}/.docker 0700 ${cfg.user} users -"
+        ];
+
         sops = {
           defaultSopsFile = self + "/secrets/secrets.yaml";
           defaultSopsFormat = "yaml";

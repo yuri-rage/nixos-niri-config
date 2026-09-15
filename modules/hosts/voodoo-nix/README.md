@@ -96,7 +96,7 @@ sudo nixos-rebuild switch --flake ~/nixcfg#voodoo-nix
 Relocate the cloned repository into `yuri`'s newly created home directory and transfer ownership:
 ```bash
 sudo mv ~/nixcfg /home/yuri/nixcfg
-sudo chown -R yuri:users /home/yuri/nixcfg
+sudo chown -R yuri:users /home/yuri
 ```
 
 ### 6. Restart WSL Session
@@ -111,17 +111,24 @@ wsl -d voodoo-nix
 ### 7. Clean Up `nixos` & Activate Home Manager
 Now inside WSL as `yuri`:
 ```bash
-# Remove leftover installer home directory and account:
+# Remove leftover installer home directory (the nixos user account was already deleted automatically by NixOS):
 sudo rm -rf /home/nixos
-sudo userdel nixos
 
-# (Optional) Provision user Age key for SOPS CLI / 'j secrets' editing:
+# Provision personal client SSH key (for GitHub push/pull and LAN SSH):
+mkdir -p ~/.ssh
+cp /mnt/c/path/to/id_ed25519 ~/.ssh/id_ed25519
+chmod 600 ~/.ssh/id_ed25519
+
+# (Optional) Switch repository remote from HTTPS to SSH:
+cd ~/nixcfg
+git remote set-url origin git@github.com:yuri-rage/nixos-niri-config.git
+
+# Provision user Age key for SOPS CLI / 'j secrets' editing:
 mkdir -p ~/.config/sops/age
 cp /mnt/c/path/to/keys.txt ~/.config/sops/age/keys.txt
 chmod 600 ~/.config/sops/age/keys.txt
 
 # Build and activate the initial Home Manager configuration:
-cd ~/nixcfg
 home-manager switch --flake ~/nixcfg#yuri@voodoo-nix
 
 # Reload your shell to source the newly generated aliases and completions:
