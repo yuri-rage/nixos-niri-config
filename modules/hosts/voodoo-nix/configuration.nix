@@ -50,10 +50,11 @@
       # Allow unfree packages
       nixpkgs.config.allowUnfree = true;
 
-      # User configuration
+      # User configuration (inherits UID 1000 from default installer user)
       security.sudo.wheelNeedsPassword = false;
       users.users.yuri = {
         isNormalUser = true;
+        uid = 1000;
         extraGroups = [
           "wheel"
           "docker"

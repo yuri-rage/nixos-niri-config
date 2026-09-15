@@ -18,13 +18,22 @@
 | **Compositor** | [Niri](https://github.com/YaLTeR/niri) | Scrollable-tiling Wayland compositor with custom active gradients & floating rules |
 | **Shell & Bar** | [Noctalia](https://github.com/noctalia-dev/noctalia) | Status bar, audio visualizer, media widget, control center, weather, and launcher |
 | **Terminal** | [Foot](https://codeberg.org/dnkl/foot) | Fast Wayland terminal client/server daemon with dark theme, tiling (`Mod+T`), and scratchpad (`Mod+S`) |
-| **Editor** | [Neovim](https://neovim.io/) / [Zed](https://zed.dev/) | Lua-based Lazy.nvim setup + Zed editor with `basedpyright`, `ruff`, `nil`, `lua-ls`, and `nixd` |
+| **Editor** | [Neovim](https://neovim.io/) / [Zed](https://zed.dev/) | Lua-based Lazy.nvim setup + Zed editor with `basedpyright`, `ruff`, `nil`, `lua-ls`, `tinymist`, and `nixd` |
 | **Browser** | [Zen Browser](https://zen-browser.app/) | Privacy-focused Gecko browser |
 | **File Manager** | [Nautilus](https://apps.gnome.org/Nautilus/) (GNOME Files) | GTK4/Adwaita file manager with Sushi QuickLook & "Open in Foot" integration |
 | **Media Player** | [`spotify_player`](https://github.com/aome510/spotify-player) | Headless background daemon (`systemd.user.services.spotify-player`) with MPRIS & launcher bridge |
 | **Secrets** | [sops-nix](https://github.com/Mic92/sops-nix) | Declarative secret decryption (`smb-credentials`, `ssh-hosts`) via Age keys |
 | **Streaming** | [Sunshine](https://github.com/LizardByte/Sunshine) / Moonlight | Low-latency Wayland KMS capture with custom EDID injection & rtkit priority |
 | **Theming** | Catppuccin Mocha + Inter 9pt | Unified dark theme across GTK, Foot, Zed, Neovim, and Starship |
+
+---
+
+## Supported Hosts
+
+| Host | Platform | Role | Documentation |
+| :--- | :--- | :--- | :--- |
+| **`rage-nix`** | KVM / Proxmox VE | Workstation Desktop | Primary GPU workstation with RTX 5080, Niri Wayland desktop, Noctalia shell, and Sunshine streaming. |
+| **`voodoo-nix`** | WSL2 (Windows 11) | Headless Development | Integrated WSL2 environment with Windows interop, Docker, and Neovim. See [**`voodoo-nix/README.md`**](modules/hosts/voodoo-nix/README.md). |
 
 ---
 
@@ -62,6 +71,7 @@ nixcfg/
 │   │   │   ├── language-servers/     # LSP binaries (basedpyright, ruff, nil, nixd, etc.)
 │   │   │   ├── nixcfg-tooling/       # Just runner integration, complete-j.sh, 'j' wrapper
 │   │   │   ├── proxmox-remote/       # Remote Proxmox VE admin utilities (pve-update-lxcs)
+│   │   │   ├── typst/                # Typst compiler, tinymist LSP, and typstyle formatter
 │   │   │   └── zed/                  # Zed editor settings, filetype mappings, LSP configs
 │   │   ├── media/                    # Media stack & storage
 │   │   │   ├── makemkv/              # Optical disc ripping & video transcoding (ffmpeg, mkvtoolnix)
@@ -78,10 +88,14 @@ nixcfg/
 │   │       ├── ssh/                  # Declarative SSH client with sops host inventory
 │   │       └── starship/             # Cross-shell prompt configuration
 │   └── hosts/
-│       └── rage-nix/                 # Host composition for rage-nix
+│       ├── rage-nix/                 # Host composition for rage-nix
+│       │   ├── default.nix           # Flake output instances (nixosConfigurations, homeConfigurations)
+│       │   ├── configuration.nix     # User accounts, storage mounts, secrets, and module imports
+│       │   └── hardware.nix          # Hardware drivers, kernel modules, QEMU agent, filesystems
+│       └── voodoo-nix/               # Host composition for voodoo-nix (WSL2)
 │           ├── default.nix           # Flake output instances (nixosConfigurations, homeConfigurations)
-│           ├── configuration.nix     # User accounts, storage mounts, secrets, and module imports
-│           └── hardware.nix          # Hardware drivers, kernel modules, QEMU agent, filesystems
+│           ├── configuration.nix     # WSL options, user setup, and module imports
+│           └── README.md             # Detailed WSL2 host documentation
 └── README.md                         # Architecture documentation
 ```
 
