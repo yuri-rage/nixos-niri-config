@@ -63,14 +63,14 @@ programs.git.config.safe.directory = "/home/yuri/nixcfg";
 ## Provisioning & Setup on Windows
 
 ### 1. Install NixOS-WSL
-Download the latest `nixos-wsl.tar.gz` from [NixOS-WSL Releases](https://github.com/nix-community/NixOS-WSL/releases) and import it into WSL:
+Download the latest `nixos.wsl` from [NixOS-WSL Releases](https://github.com/nix-community/NixOS-WSL/releases) and install it with the custom name `voodoo-nix` using Windows PowerShell:
+
 ```powershell
-# From Windows PowerShell:
-wsl --import voodoo-nix C:\WSL\voodoo-nix .\nixos-wsl.tar.gz --version 2
+wsl --install --from-file .\nixos.wsl --name voodoo-nix
 ```
 
 ### 2. Rename Default User & Home Directory
-Launch the new instance as `root` so the default `nixos` user (UID 1000) can be cleanly renamed to `yuri` without active process locks:
+Launch the instance as `root` so the default `nixos` user (UID 1000) can be cleanly renamed to `yuri` without active process locks:
 ```powershell
 # Enter as root from Windows PowerShell:
 wsl -d voodoo-nix -u root
