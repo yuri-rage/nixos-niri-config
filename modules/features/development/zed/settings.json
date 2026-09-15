@@ -60,11 +60,16 @@
   },
   "languages": {
     "Python": {
-      "language_servers": [
-        "ruff",
-        "basedpyright"
-      ]
-    }
+      "language_servers": ["ruff", "basedpyright"],
+    },
+    "Typst": {
+      "language_servers": ["tinymist"],
+      "formatter": {
+        "external": {
+          "command": "typstyle",
+        },
+      },
+    },
   },
   "lsp": {
     "nil": {
@@ -79,18 +84,37 @@
     "ruff": {
       "binary": {
         "path": "ruff",
-        "arguments": [
-          "server"
-        ]
-      }
+        "arguments": ["server"],
+      },
     },
     "basedpyright": {
       "binary": {
         "path": "basedpyright-langserver",
-        "arguments": [
-          "--stdio"
-        ]
-      }
-    }
-  }
+        "arguments": ["--stdio"],
+      },
+    },
+    "tinymist": {
+      "binary": {
+        "path": "tinymist",
+      },
+      "initialization_options": {
+        // Enable background preview
+        // Server will be running on 127.0.0.1:23635
+        "preview": {
+          "background": {
+            "enabled": true,
+          },
+        },
+      },
+      "settings": {
+        // Compile on save
+        // This will compile a PDF for the `main.typ` file in the project root.
+        "exportPdf": "onSave",
+        "outputPath": "$root/$name",
+
+        // Enable formatter
+        "formatterMode": "typstyle",
+      },
+    },
+  },
 }

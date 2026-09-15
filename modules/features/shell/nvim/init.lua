@@ -180,13 +180,13 @@ if ts then
     pcall(ts.install, {
         "bash", "c", "cpp", "html", "json", "lua",
         "markdown", "markdown_inline", "nix", "python",
-        "regex", "toml", "vim", "vimdoc", "yaml",
+        "regex", "toml", "typst", "vim", "vimdoc", "yaml",
     })
 
     vim.api.nvim_create_autocmd("FileType", {
         pattern = {
             "bash", "c", "cpp", "help", "html", "json", "lua",
-            "markdown", "nix", "python", "toml", "vim", "yaml",
+            "markdown", "nix", "python", "toml", "typst", "vim", "yaml",
         },
         callback = function()
             if pcall(vim.treesitter.start) then
@@ -383,6 +383,7 @@ vim.lsp.enable({
     "dockerls",
     "eslint",
     "harper_ls",
+    "tinymist",
 })
 
 -- 4.4 LSP Attach Handlers (Completion & Inlay Hints)
