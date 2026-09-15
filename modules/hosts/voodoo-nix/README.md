@@ -73,7 +73,7 @@ wsl --install --from-file .\nixos.wsl --name voodoo-nix
 ### 2. Clone Repository
 From the active prompt inside the instance, clone the repository via an ephemeral `nix-shell`:
 ```bash
-nix-shell -p git --run "git clone https://github.com/yuri-rage/nixcfg.git ~/nixcfg"
+nix-shell -p git --run "git clone https://github.com/yuri-rage/nixos-niri-config.git ~/nixcfg"
 ```
 
 ### 3. Initial System Bootstrap
