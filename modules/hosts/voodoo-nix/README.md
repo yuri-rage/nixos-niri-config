@@ -63,50 +63,41 @@ programs.git.config.safe.directory = "/home/yuri/nixcfg";
 ## Provisioning & Setup on Windows
 
 ### 1. Install NixOS-WSL
-Download the latest `nixos.wsl` from [NixOS-WSL Releases](https://github.com/nix-community/NixOS-WSL/releases) and install it with the custom name `voodoo-nix` using Windows PowerShell:
+Download the latest `nixos.wsl` from [NixOS-WSL Releases](https://github.com/nix-community/NixOS-WSL/releases) and install it with the custom name `voodoo-nix` from Windows PowerShell:
 
 ```powershell
 wsl --install --from-file .\nixos.wsl --name voodoo-nix
 ```
+*Windows will install the distribution and automatically drop you directly into the new instance at the `nixos` shell prompt.*
 
-### 2. Rename Default User & Home Directory
-Launch the instance as `root` so the default `nixos` user (UID 1000) can be cleanly renamed to `yuri` without active process locks:
-```powershell
-# Enter as root from Windows PowerShell:
-wsl -d voodoo-nix -u root
-```
-Inside the container as root:
+### 2. Clone Repository
+From the active prompt inside the instance, clone the repository via an ephemeral `nix-shell`:
 ```bash
-# Rename the default installer user (UID 1000) and its primary group to yuri:
-usermod -l yuri -d /home/yuri -m nixos
-groupmod -n yuri nixos
-```
-*Renaming retains UID 1000 (consistent with `rage-nix`), automatically moves `/home/nixos` to `/home/yuri`, preserves file permissions, and avoids leftover accounts.*
-
-### 3. Clone Repository
-Still inside the container as root, clone the repository into `yuri`'s home using an ephemeral `nix-shell`:
-```bash
-su - yuri -c "nix-shell -p git --run 'git clone https://github.com/yuri-rage/nixcfg.git ~/nixcfg'"
+nix-shell -p git --run "git clone https://github.com/yuri-rage/nixcfg.git ~/nixcfg"
 ```
 
-### 4. Initial System Bootstrap
+### 3. Initial System Bootstrap
 Build and activate the initial NixOS system configuration directly referencing the `nixcfg` flake:
 ```bash
-nixos-rebuild switch --flake /home/yuri/nixcfg#voodoo-nix
+sudo nixos-rebuild switch --flake ~/nixcfg#voodoo-nix
 ```
-*This initial build configures `wsl.defaultUser = "yuri"` (ensuring smooth Windows autologin), sets `networking.hostName = "voodoo-nix"`, and provisions the system packages including `home-manager`.*
+*This build declaratively creates the `yuri` user and `/home/yuri`, sets `wsl.defaultUser = "yuri"` for Windows autologin, sets the hostname to `voodoo-nix`, and installs `home-manager`.*
+
+### 4. Move Repository to `/home/yuri`
+Relocate the cloned repository into `yuri`'s newly created home directory and transfer ownership:
+```bash
+sudo mv ~/nixcfg /home/yuri/nixcfg
+sudo chown -R yuri:users /home/yuri/nixcfg
+```
 
 ### 5. Restart WSL Session
-Exit the root shell and restart the instance from PowerShell to apply the autologin default user:
+Exit the session and restart the distribution from Windows PowerShell to apply the new default user:
 ```powershell
-# Exit root shell:
 exit
-
-# Terminate and relaunch from Windows PowerShell:
 wsl -t voodoo-nix
 wsl -d voodoo-nix
 ```
-WSL will now automatically log in directly as `yuri@voodoo-nix` in `/home/yuri`.
+*WSL will now automatically log in directly as `yuri@voodoo-nix` in `/home/yuri`.*
 
 ### 6. Provision Secrets & Activate Home Manager
 Now inside WSL as `yuri`:
