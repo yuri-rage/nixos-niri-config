@@ -103,7 +103,7 @@ sudo chown -R yuri:users /home/yuri
 Exit the session and restart the distribution from Windows PowerShell to apply the new default user:
 ```powershell
 exit
-wsl -t voodoo-nix
+wsl --shutdown
 wsl -d voodoo-nix
 ```
 *WSL will now automatically log in directly as `yuri@voodoo-nix` in `/home/yuri`.*
