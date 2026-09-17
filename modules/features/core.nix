@@ -47,7 +47,14 @@
       programs.nix-ld.enable = true;
 
       # Essential System Services
-      services.printing.enable = true;
+      services.printing = {
+        enable = true;
+        browsedConf = ''
+          BrowseRemoteProtocols dnssd cups
+          BrowseProtocols dnssd cups
+          CreateIPPPrinterQueues All
+        '';
+      };
       services.avahi = {
         enable = true;
         nssmdns4 = true;
