@@ -23,17 +23,33 @@
 
   # Custom Flake Packages
   perSystem =
-    { pkgs, ... }:
+    { lib, pkgs, ... }:
+    let
+      wrapMediaScript =
+        name: scriptPath:
+        pkgs.runCommand name
+          {
+            nativeBuildInputs = [
+              pkgs.makeWrapper
+              pkgs.python3
+            ];
+          }
+          ''
+            mkdir -p $out/bin
+            cp ${scriptPath} $out/bin/${name}
+            chmod +x $out/bin/${name}
+            patchShebangs $out/bin/${name}
+            wrapProgram $out/bin/${name} \
+              --prefix PATH : ${
+                lib.makeBinPath [
+                  pkgs.ffmpeg
+                  pkgs.mkvtoolnix-cli
+                ]
+              }
+          '';
+    in
     {
-      packages.import-movie = pkgs.writeScriptBin "import-movie" (
-        builtins.replaceStrings [ "#!/usr/bin/env python3" ] [ "#!${pkgs.python3}/bin/python3" ] (
-          builtins.readFile ./import-movie
-        )
-      );
-      packages.import-tv = pkgs.writeScriptBin "import-tv" (
-        builtins.replaceStrings [ "#!/usr/bin/env python3" ] [ "#!${pkgs.python3}/bin/python3" ] (
-          builtins.readFile ./import-tv
-        )
-      );
+      packages.import-movie = wrapMediaScript "import-movie" ./import-movie;
+      packages.import-tv = wrapMediaScript "import-tv" ./import-tv;
     };
 }
