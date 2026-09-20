@@ -9,6 +9,12 @@ output "DP-1" {
     position x=0 y=0
 }
 
+output "HDMI-A-1" {
+    mode "3440x1440@99.998"
+    scale 1
+    position x=0 y=0
+}
+
 input {
     keyboard {
         xkb {
