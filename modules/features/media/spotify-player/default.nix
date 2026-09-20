@@ -21,11 +21,13 @@
     };
 
   flake.homeModules.spotify-player =
-    { pkgs, ... }:
+    { link, pkgs, ... }:
     {
       imports = [ self.homeModules.common ];
-      xdg.configFile."spotify-player/app.toml".source = ./app.toml;
-      xdg.configFile."spotify-player/theme.toml".source = ./theme.toml;
+      xdg.configFile."spotify-player/app.toml".source =
+        link "modules/features/media/spotify-player/app.toml";
+      xdg.configFile."spotify-player/theme.toml".source =
+        link "modules/features/media/spotify-player/theme.toml";
 
       systemd.user.services.spotify-player = {
         Unit = {
