@@ -240,17 +240,19 @@ vim.api.nvim_create_autocmd("FileType", {
 -- 3.8 Modals & Pickers (Snacks)
 local function responsive_logo_section(self)
     local assets_dir = vim.fn.stdpath("config") .. "/assets"
+    local large_path = assets_dir .. "/neovim_large.ansi"
     local starman_path = assets_dir .. "/starman.ansi"
     local neovim_path = assets_dir .. "/neovim.ansi"
 
     local is_tall = (self._size and self._size.height or vim.o.lines) >= 44
-    local target_path = is_tall and starman_path or neovim_path
+    local tall_target = vim.fn.filereadable(large_path) == 1 and large_path or starman_path
+    local target_path = is_tall and tall_target or neovim_path
     if vim.fn.filereadable(target_path) ~= 1 then
         return nil
     end
 
-    local height = is_tall and 32 or 16
-    local width = is_tall and 50 or 23
+    local height = is_tall and (target_path == large_path and 33 or 32) or 16
+    local width = is_tall and (target_path == large_path and 47 or 50) or 22
     local indent = math.max(0, math.floor(((self.opts.width or 60) - width) / 2))
 
     local buf = vim.api.nvim_create_buf(false, true)
