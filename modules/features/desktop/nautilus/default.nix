@@ -25,6 +25,10 @@
       services.gvfs.enable = true;
       services.tumbler.enable = true;
       services.udisks2.enable = true;
+
+      environment.sessionVariables = {
+        NAUTILUS_4_EXTENSION_DIR = "/run/current-system/sw/lib/nautilus/extensions-4";
+      };
     };
 
   flake.homeModules.nautilus =
