@@ -8,7 +8,8 @@
 # required artifacts:
 #   - init.lua
 #   - nvim-pack-lock.json
-#   - assets/logo.txt
+#   - assets/starman.ansi
+#   - assets/neovim.ansi
 #   - spell/en.utf-8.add
 
 { self, ... }:

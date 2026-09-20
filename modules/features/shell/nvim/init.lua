@@ -146,6 +146,8 @@ if setup("catppuccin", {
     custom_highlights = function(colors)
         return {
             SnacksGhNormalFloat = { fg = colors.text },
+            SnacksDashboardIcon = { fg = colors.lavender, bold = true },
+            SnacksDashboardTitle = { fg = colors.lavender, bold = true },
         }
     end,
 }) then
@@ -236,8 +238,63 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 -- 3.8 Modals & Pickers (Snacks)
-local logo_path = vim.fn.stdpath("config") .. "/assets/logo.txt"
-local logo = vim.fn.filereadable(logo_path) == 1 and vim.fn.readfile(logo_path) or {}
+local function responsive_logo_section(self)
+    local assets_dir = vim.fn.stdpath("config") .. "/assets"
+    local starman_path = assets_dir .. "/starman.ansi"
+    local neovim_path = assets_dir .. "/neovim.ansi"
+
+    local is_tall = (self._size and self._size.height or vim.o.lines) >= 44
+    local target_path = is_tall and starman_path or neovim_path
+    if vim.fn.filereadable(target_path) ~= 1 then
+        return nil
+    end
+
+    local height = is_tall and 32 or 16
+    local width = is_tall and 50 or 23
+    local indent = math.max(0, math.floor(((self.opts.width or 60) - width) / 2))
+
+    local buf = vim.api.nvim_create_buf(false, true)
+    vim.bo[buf].buftype = "nofile"
+    local f = io.open(target_path, "r")
+    if f then
+        local content = f:read("*a")
+        f:close()
+        local chan = vim.api.nvim_open_term(buf, {})
+        vim.api.nvim_chan_send(chan, content)
+        vim.bo[buf].scrollback = 9999
+        vim.bo[buf].scrollback = 9998
+    end
+    local win
+    return {
+        render = function(_, pos)
+            win = vim.api.nvim_open_win(buf, false, {
+                bufpos = { pos[1] - 1, pos[2] + 1 },
+                col = indent,
+                focusable = false,
+                height = height,
+                noautocmd = true,
+                relative = "win",
+                row = 0,
+                zindex = require("snacks").config.styles.dashboard.zindex + 1,
+                style = "minimal",
+                width = width,
+                win = self.win,
+                border = "none",
+            })
+            local hl = "SnacksDashboardTerminal"
+            require("snacks").util.wo(win, { winhighlight = "TermCursorNC:" .. hl .. ",NormalFloat:" .. hl })
+            require("snacks").util.bo(buf, { filetype = require("snacks").config.styles.dashboard.bo.filetype })
+            local close = vim.schedule_wrap(function()
+                pcall(vim.api.nvim_win_close, win, true)
+                pcall(vim.api.nvim_buf_delete, buf, { force = true })
+                return true
+            end)
+            self.on("UpdatePre", close, self.augroup)
+            self.on("Closed", close, self.augroup)
+        end,
+        text = ("\n"):rep(height - 1),
+    }
+end
 
 local sqlite_path = (function()
     local candidates = {
@@ -257,12 +314,9 @@ setup("snacks", {
     dashboard = {
         enabled = true,
         sections = {
-            { section = "header" },
+            responsive_logo_section,
             { section = "keys", gap = 1, padding = 1 },
             { section = "recent_files", icon = " ", title = "Recent Files", indent = 2, padding = 1 },
-        },
-        preset = {
-            header = table.concat(logo, "\n"),
         },
     },
     explorer = { enabled = false },
