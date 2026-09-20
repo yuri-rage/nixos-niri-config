@@ -38,6 +38,7 @@
 
       networking.hostName = "voodoo-nix";
       system.stateVersion = "26.05";
+      nixpkgs.hostPlatform = "x86_64-linux";
 
       # Disable bare-metal/non-WSL services brought in by core
       boot.loader.systemd-boot.enable = lib.mkForce false;
