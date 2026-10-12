@@ -1,4 +1,4 @@
-config_version = 14
+config_version = 15
 
 [bar.default]
 background_opacity = 0.0
@@ -52,7 +52,7 @@ widget_order = [ "lockscreen-login-box@HDMI-A-1", "lockscreen-login-box@Virtual-
     [lockscreen_widgets.widget."lockscreen-login-box@HDMI-A-1"]
     box_height = 196.0
     box_width = 810.0
-    cx = 1720.0
+    cx = 1720.0001220703125
     cy = 1258.0
     output = "HDMI-A-1"
     placement_height = 1440.0
