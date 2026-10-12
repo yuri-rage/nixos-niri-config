@@ -37,6 +37,12 @@
         nvidiaSettings = false; # Headless / pure Wayland clean
       };
 
+      # Prevent live restarts during driver upgrades (kernel module cannot be hot-swapped while desktop is running)
+      systemd.services.nvidia-persistenced = {
+        restartIfChanged = false;
+        stopIfChanged = false;
+      };
+
       # Realtime Audio Scheduling Priority
       security.rtkit.enable = true;
 
