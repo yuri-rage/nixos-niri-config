@@ -182,13 +182,13 @@ if ts then
     pcall(ts.install, {
         "bash", "c", "cpp", "html", "json", "lua",
         "markdown", "markdown_inline", "nix", "python",
-        "regex", "toml", "typst", "vim", "vimdoc", "yaml",
+        "regex", "rust", "toml", "typst", "vim", "vimdoc", "yaml",
     })
 
     vim.api.nvim_create_autocmd("FileType", {
         pattern = {
             "bash", "c", "cpp", "help", "html", "json", "lua",
-            "markdown", "nix", "python", "toml", "typst", "vim", "yaml",
+            "markdown", "nix", "python", "rust", "toml", "typst", "vim", "yaml",
         },
         callback = function()
             if pcall(vim.treesitter.start) then
@@ -426,6 +426,22 @@ vim.lsp.config("clangd", {
     cmd = { "clangd", "--inlay-hints" },
 })
 
+vim.lsp.config("rust_analyzer", {
+    settings = {
+        ["rust-analyzer"] = {
+            check = {
+                command = "clippy",
+            },
+            cargo = {
+                allFeatures = true,
+            },
+            procMacro = {
+                enable = true,
+            },
+        },
+    },
+})
+
 -- 4.3 Enable Language Servers
 vim.lsp.enable({
     "clangd",
@@ -440,6 +456,7 @@ vim.lsp.enable({
     "eslint",
     "harper_ls",
     "tinymist",
+    "rust_analyzer",
 })
 
 -- 4.4 LSP Attach Handlers (Completion & Inlay Hints)
