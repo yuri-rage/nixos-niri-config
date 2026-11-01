@@ -24,6 +24,7 @@
 | **Media Player** | [`spotify_player`](https://github.com/aome510/spotify-player) | Headless background daemon (`systemd.user.services.spotify-player`) with MPRIS & launcher bridge |
 | **Secrets** | [sops-nix](https://github.com/Mic92/sops-nix) | Declarative secret decryption (`smb-credentials`, `ssh-hosts`) via Age keys |
 | **Streaming** | [Sunshine](https://github.com/LizardByte/Sunshine) / Moonlight | Low-latency Wayland KMS capture with custom EDID injection & rtkit priority |
+| **Remote Access** | [Tailscale](https://tailscale.com/) / [RustDesk](https://rustdesk.com/) | Tailscale mesh VPN daemon + RustDesk Flutter client for secure remote access |
 | **Theming** | Catppuccin Mocha + Inter 9pt | Unified dark theme across GTK, Foot, Zed, Neovim, and Starship |
 
 ---
@@ -61,6 +62,7 @@ nixcfg/
 │   │   │   ├── nautilus/             # Nautilus file manager, sushi preview, dconf settings
 │   │   │   ├── niri/                 # Niri compositor, greetd auto-login, config.kdl
 │   │   │   ├── noctalia/             # Noctalia shell, settings.toml, plugins/spotify, wallpapers
+│   │   │   ├── remote/               # Remote access (Tailscale mesh VPN & RustDesk client)
 │   │   │   └── sunshine/             # Sunshine game streaming server, KMS capture, uinput
 │   │   ├── development/              # Developer toolchains & IDEs
 │   │   │   ├── default.nix           # Dev aggregator + antigravity-cli & python3
@@ -71,6 +73,7 @@ nixcfg/
 │   │   │   ├── language-servers/     # LSP binaries (basedpyright, ruff, nil, nixd, etc.)
 │   │   │   ├── nixcfg-tooling/       # Just runner integration, complete-j.sh, 'j' wrapper
 │   │   │   ├── proxmox-remote/       # Remote Proxmox VE admin utilities (pve-update-lxcs)
+│   │   │   ├── rust/                 # Rust toolchain (rustc, cargo, clippy, rustfmt, rust-analyzer)
 │   │   │   ├── typst/                # Typst compiler, tinymist LSP, and typstyle formatter
 │   │   │   └── zed/                  # Zed editor settings, filetype mappings, LSP configs
 │   │   ├── media/                    # Media stack & storage

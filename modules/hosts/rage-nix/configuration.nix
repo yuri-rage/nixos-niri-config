@@ -23,6 +23,7 @@
         self.nixosModules.apps
         self.nixosModules.appearance
         self.nixosModules.sunshine
+        self.nixosModules.remote
         self.nixosModules.bat
         self.nixosModules.btop
         self.nixosModules.fastfetch
