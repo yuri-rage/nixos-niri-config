@@ -324,6 +324,16 @@ binds {
     Mod+Shift+Minus { set-window-height "-10%"; }
     Mod+Shift+Equal { set-window-height "+10%"; }
 
+    Mod+KP_End   { set-column-width "16.667%"; }
+    Mod+KP_Down  { set-column-width "25%"; }
+    Mod+KP_Next  { set-column-width "33.333%"; }
+    Mod+KP_Left  { set-column-width "50%"; }
+    Mod+KP_Begin { set-column-width "66.666%"; }
+    Mod+KP_Right { set-column-width "75%"; }
+    Mod+KP_Home { set-column-width "83.333%"; }
+    Mod+KP_Up { set-column-width "100%"; }
+    
+
     // Floating & Tabs
     Mod+V       { toggle-window-floating; }
     Mod+Shift+V { switch-focus-between-floating-and-tiling; }
