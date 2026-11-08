@@ -7,7 +7,7 @@
 #   - user:   nautilus dconf preferences + desktop launcher entry
 #
 # required artifacts:
-#   - ~/.local/share/nautilus-python/extensions/open-in-foot.py (provided by foot module)
+#   - ~/.local/share/nautilus-python/extensions/open-in-wezterm.py (provided by wezterm module)
 
 { ... }:
 {

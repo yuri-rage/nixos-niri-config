@@ -6,9 +6,9 @@ from typing import Any
 from gi.repository import Gio, GObject, Nautilus  # type: ignore[import-not-found]
 
 
-def open_in_foot_activated(_menu: object, paths: list[str]) -> None:
+def open_in_wezterm_activated(_menu: object, paths: list[str]) -> None:
     for path in paths:
-        cmd: list[str] = ["footclient", f"--working-directory={path}"]
+        cmd: list[str] = ["wezterm", "start", f"--cwd={path}"]
         Gio.Subprocess.new(cmd, Gio.SubprocessFlags.NONE)
 
 
@@ -26,20 +26,24 @@ def get_paths_to_open(files: Sequence[Any]) -> list[str]:
 
 
 def get_items_for_files(name: str, files: Sequence[Any]) -> list[Any]:
-    if not shutil.which("footclient"):
+    if not shutil.which("wezterm"):
         return []
 
     paths = get_paths_to_open(files)
     if paths:
-        item = Nautilus.MenuItem(name=name, label="Open in Foot", icon="foot")
-        item.connect("activate", open_in_foot_activated, paths)
+        item = Nautilus.MenuItem(
+            name=name,
+            label="Open in WezTerm",
+            icon="org.wezfurlong.wezterm",
+        )
+        item.connect("activate", open_in_wezterm_activated, paths)
         return [item]
     return []
 
 
-class FootMenuProvider(GObject.GObject, Nautilus.MenuProvider):
+class WeztermMenuProvider(GObject.GObject, Nautilus.MenuProvider):
     def get_file_items(self, files: Sequence[Any]) -> list[Any]:
-        return get_items_for_files("FootNautilus::open_in_foot", files)
+        return get_items_for_files("WeztermNautilus::open_in_wezterm", files)
 
     def get_background_items(self, file: Any) -> list[Any]:
-        return get_items_for_files("FootNautilus::open_folder_in_foot", [file])
+        return get_items_for_files("WeztermNautilus::open_folder_in_wezterm", [file])

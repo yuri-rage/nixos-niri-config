@@ -3,7 +3,7 @@ Type=Application
 Name=Spotify Player
 GenericName=Music Player
 Comment=Terminal Spotify Client
-Exec=footclient --app-id=foot.spotify spotify_player
+Exec=wezterm --config enable_tab_bar=false start --class wezterm.spotify --workspace spotify spotify_player
 Icon=spotify
 Terminal=false
 Categories=Audio;Music;Player;AudioVideo;

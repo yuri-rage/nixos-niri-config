@@ -17,15 +17,15 @@
 | **OS** | [NixOS](https://nixos.org/) (Unstable Flake) | Declarative, reproducible system configuration with `nix-ld` FHS binary compatibility |
 | **Compositor** | [Niri](https://github.com/YaLTeR/niri) | Scrollable-tiling Wayland compositor with custom active gradients & floating rules |
 | **Shell & Bar** | [Noctalia](https://github.com/noctalia-dev/noctalia) | Status bar, audio visualizer, media widget, control center, weather, and launcher |
-| **Terminal** | [Foot](https://codeberg.org/dnkl/foot) | Fast Wayland terminal client/server daemon with dark theme, tiling (`Mod+T`), and scratchpad (`Mod+S`) |
+| **Terminal** | [WezTerm](https://wezfurlong.org/wezterm/) | Fast GPU terminal with tabs, dark theme, tiling (`Mod+T`), and tabless scratchpad (`Mod+S`) |
 | **Editor** | [Neovim](https://neovim.io/) / [Zed](https://zed.dev/) | Lua-based Lazy.nvim setup + Zed editor with `basedpyright`, `ruff`, `nil`, `lua-ls`, `tinymist`, and `nixd` |
 | **Browser** | [Zen Browser](https://zen-browser.app/) | Privacy-focused Gecko browser |
-| **File Manager** | [Nautilus](https://apps.gnome.org/Nautilus/) (GNOME Files) | GTK4/Adwaita file manager with Sushi QuickLook & "Open in Foot" integration |
+| **File Manager** | [Nautilus](https://apps.gnome.org/Nautilus/) (GNOME Files) | GTK4/Adwaita file manager with Sushi QuickLook & "Open in WezTerm" integration |
 | **Media Player** | [`spotify_player`](https://github.com/aome510/spotify-player) | Headless background daemon (`systemd.user.services.spotify-player`) with MPRIS & launcher bridge |
 | **Secrets** | [sops-nix](https://github.com/Mic92/sops-nix) | Declarative secret decryption (`smb-credentials`, `ssh-hosts`) via Age keys |
 | **Streaming** | [Sunshine](https://github.com/LizardByte/Sunshine) / Moonlight | Low-latency Wayland KMS capture with custom EDID injection & rtkit priority |
 | **Remote Access** | [Tailscale](https://tailscale.com/) / [RustDesk](https://rustdesk.com/) | Tailscale mesh VPN daemon + RustDesk Flutter client for secure remote access |
-| **Theming** | Catppuccin Mocha + Inter 9pt | Unified dark theme across GTK, Foot, Zed, Neovim, and Starship |
+| **Theming** | Catppuccin Mocha + Inter 9pt | Unified dark theme across GTK, WezTerm, Zed, Neovim, and Starship |
 
 ---
 
@@ -58,7 +58,7 @@ nixcfg/
 │   │   ├── desktop/                  # Workstation GUI modules
 │   │   │   ├── appearance/           # GTK theme, cursor, font scaling, icon packages
 │   │   │   ├── apps/                 # Graphical user packages (Zen Browser, etc.)
-│   │   │   ├── foot/                 # Foot terminal config & Nautilus open-in-foot extension
+│   │   │   ├── wezterm/              # WezTerm terminal config & Nautilus open-in-wezterm extension
 │   │   │   ├── nautilus/             # Nautilus file manager, sushi preview, dconf settings
 │   │   │   ├── niri/                 # Niri compositor, greetd auto-login, config.kdl
 │   │   │   ├── noctalia/             # Noctalia shell, settings.toml, plugins/spotify, wallpapers
@@ -159,12 +159,12 @@ sops updatekeys secrets/secrets.yaml
 ## Hotkeys & Shortcuts
 
 ### Niri Window Manager
-* `Mod + T`: Open standard tiling Foot terminal (`footclient`)
-* `Mod + Shift + T`: Open standalone Foot terminal (`foot`)
-* `Mod + S`: Open centered 900×560 floating scratchpad terminal
+* `Mod + T`: Open standard tiling WezTerm terminal with tabs (`wezterm start`)
+* `Mod + Shift + T`: Open standalone WezTerm terminal (`wezterm start --always-new-process`)
+* `Mod + S`: Open centered 830×570 floating scratchpad terminal without tabs
 * `Mod + B`: Open Zen Browser
 * `Mod + E`: Open Nautilus file manager
-* `Mod + M`: Open floating `spotify_player` TUI window
+* `Mod + M`: Open floating `spotify_player` TUI window without tabs
 * `Mod + P`: **Toggle Spotify Play / Pause** (`spotify_player playback play-pause`)
 * `Mod + D`: Open Noctalia application launcher
 * `Mod + O`: Toggle workspace overview
@@ -179,7 +179,7 @@ sops updatekeys secrets/secrets.yaml
 
 ### Nautilus (File Manager)
 * `Space`: **GNOME Sushi QuickLook** preview (images, videos, audio, code, PDFs)
-* `Right-Click`: **Open in Foot** terminal action
+* `Right-Click`: **Open in WezTerm** terminal action
 * `Ctrl + L`: Open direct editable path entry bar
 
 ---

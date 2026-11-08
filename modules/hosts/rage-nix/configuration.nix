@@ -84,7 +84,7 @@
         self.homeModules.appearance
         self.homeModules.noctalia
         self.homeModules.bash
-        self.homeModules.foot
+        self.homeModules.wezterm
         self.homeModules.nvim
         self.homeModules.ssh
         self.homeModules.storage

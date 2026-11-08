@@ -146,36 +146,19 @@ window-rule {
 
 // Floating Spotify player
 window-rule {
-    match app-id=r#"^com\.mitchellh\.ghostty\.spotify$"#
-    open-floating true
-    default-floating-position x=1000 y=10 relative-to="top-left"
-    default-column-width { fixed 710; }
-    default-window-height { fixed 405; }
-}
-
-// Floating scratchpad Ghostty terminal
-window-rule {
-    match app-id=r#"^com\.mitchellh\.ghostty\.floating$"#
-    open-floating true
-    default-column-width { fixed 830; }
-    default-window-height { fixed 570; }
-}
-
-// Floating Spotify player
-window-rule {
-    match app-id=r#"^foot\.spotify$"#
+    match app-id=r#"^wezterm\.spotify$"#
     open-floating true
     default-floating-position x=1000 y=10 relative-to="top-left"
     default-column-width { fixed 710; }
     default-window-height { fixed 394; }
 }
 
-// Floating scratchpad foot terminal
+// Floating scratchpad wezterm terminal
 window-rule {
-    match app-id=r#"^foot\.floating$"#
+    match app-id=r#"^wezterm\.floating$"#
     open-floating true
     default-column-width { fixed 830; }
-    default-window-height { fixed 570; }
+    default-window-height { fixed 608; }
 }
 
 // narrow vesktop
@@ -188,13 +171,12 @@ binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
 
     // Application Launchers
-    Mod+T hotkey-overlay-title="Open a Terminal: foot" { spawn "footclient"; }
-    Mod+Shift+T hotkey-overlay-title="Terminal (standalone): foot" { spawn "foot"; }
-    Mod+S hotkey-overlay-title="Open Scratchpad Terminal: foot" { spawn "footclient" "--app-id=foot.floating"; }
-    // Mod+S hotkey-overlay-title="Open Scratchpad Terminal: ghostty" { spawn "ghostty" "--class=com.mitchellh.ghostty.floating"; }
+    Mod+T hotkey-overlay-title="Open a Terminal: wezterm" { spawn "wezterm" "start"; }
+    Mod+Shift+T hotkey-overlay-title="Terminal (standalone): wezterm" { spawn "wezterm" "start" "--always-new-process"; }
+    Mod+S hotkey-overlay-title="Open Scratchpad Terminal: wezterm" { spawn "wezterm" "--config" "enable_tab_bar=false" "start" "--class" "wezterm.floating" "--workspace" "floating"; }
     Mod+D hotkey-overlay-title="Run an Application: noctalia" { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
     Mod+B hotkey-overlay-title="Browse the Web: zen" { spawn "zen"; }
-    Mod+M hotkey-overlay-title="Play Music: spotify_player" { spawn "footclient" "--app-id=foot.spotify" "spotify_player"; }
+    Mod+M hotkey-overlay-title="Play Music: spotify_player" { spawn "wezterm" "--config" "enable_tab_bar=false" "start" "--class" "wezterm.spotify" "--workspace" "spotify" "spotify_player"; }
     Mod+P hotkey-overlay-title="Play/Pause Music: spotify_player" { spawn "spotify_player" "playback" "play-pause"; }
     Mod+E hotkey-overlay-title="Open File Manager: nautilus" { spawn "nautilus" "--new-window"; }
 
