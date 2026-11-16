@@ -25,6 +25,7 @@
       # Direct package inclusion: system-wide developer utilities & Python runtime
       environment.systemPackages = with pkgs; [
         antigravity-cli
+        claude-code
         python3
       ];
     };
