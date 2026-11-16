@@ -70,6 +70,9 @@
         },
       },
     },
+    "Markdown": {
+      "soft_wrap": "editor_width"
+    }
   },
   "lsp": {
     "nil": {
