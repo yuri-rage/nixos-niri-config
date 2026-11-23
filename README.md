@@ -58,7 +58,7 @@ nixcfg/
 │   │   ├── desktop/                  # Workstation GUI modules
 │   │   │   ├── appearance/           # GTK theme, cursor, font scaling, icon packages
 │   │   │   ├── apps/                 # Graphical user packages (Zen Browser, etc.)
-│   │   │   ├── wezterm/              # WezTerm terminal config & Nautilus open-in-wezterm extension
+│   │   │   ├── wezterm/              # WezTerm terminal config (package ships Nautilus "Open in WezTerm")
 │   │   │   ├── nautilus/             # Nautilus file manager, sushi preview, dconf settings
 │   │   │   ├── niri/                 # Niri compositor, greetd auto-login, config.kdl
 │   │   │   ├── noctalia/             # Noctalia shell, settings.toml, plugins/spotify, wallpapers

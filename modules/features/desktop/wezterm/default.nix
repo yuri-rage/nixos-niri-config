@@ -3,11 +3,11 @@
 #  GPU-accelerated, feature-rich terminal emulator
 #
 # provides:
-#   - user: programs.wezterm with wezterm.lua out-of-store link + open-in-wezterm.py nautilus extension
+#   - user: programs.wezterm with wezterm.lua out-of-store link
+#           (package ships the nautilus-python "Open in WezTerm" extension)
 #
 # required artifacts:
 #   - wezterm.lua
-#   - open-in-wezterm.py
 
 { self, ... }:
 {
@@ -24,8 +24,7 @@
       #  so the xdg.configFile symlink below doesn't collide.
       xdg.configFile."wezterm/wezterm.lua".source = link "modules/features/desktop/wezterm/wezterm.lua";
 
-      # Nautilus extension (harmless cruft if not using Nautilus)
-      xdg.dataFile."nautilus-python/extensions/open-in-wezterm.py".source =
-        link "modules/features/desktop/wezterm/open-in-wezterm.py";
+      # Nautilus "Open in WezTerm" comes from the wezterm package itself
+      # (share/nautilus-python/extensions/wezterm-nautilus.py via the home profile).
     };
 }
