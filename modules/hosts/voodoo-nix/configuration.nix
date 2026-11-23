@@ -20,6 +20,7 @@
         self.nixosModules.bat
         self.nixosModules.btop
         self.nixosModules.fastfetch
+        self.nixosModules.qalc
         self.nixosModules.starship
         self.nixosModules.dev
         self.nixosModules.secrets
@@ -77,6 +78,7 @@
       imports = [
         self.homeModules.bash
         self.homeModules.nvim
+        self.homeModules.qalc
         self.homeModules.ssh
         self.homeModules.dev
       ];

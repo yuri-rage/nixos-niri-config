@@ -88,6 +88,7 @@ nixcfg/
 │   │       ├── btop/                 # System resource monitor with custom themes
 │   │       ├── fastfetch/            # System fetch tool with Starman art & Pkgs snapshot age
 │   │       ├── nvim/                 # Neovim configuration (Lazy, Basedpyright, Ruff, Snacks)
+│   │       ├── qalc/                 # libqalculate CLI calculator & daily exchange rate timer
 │   │       ├── ssh/                  # Declarative SSH client with sops host inventory
 │   │       └── starship/             # Cross-shell prompt configuration
 │   └── hosts/
@@ -164,6 +165,7 @@ sops updatekeys secrets/secrets.yaml
 * `Mod + S`: Open centered 830×570 floating scratchpad terminal without tabs
 * `Mod + B`: Open Zen Browser
 * `Mod + E`: Open Nautilus file manager
+* `Mod + F12`: Open floating `qalc` calculator (`libqalculate`)
 * `Mod + M`: Open floating `spotify_player` TUI window without tabs
 * `Mod + P`: **Toggle Spotify Play / Pause** (`spotify_player playback play-pause`)
 * `Mod + D`: Open Noctalia application launcher

@@ -27,6 +27,7 @@
         self.nixosModules.bat
         self.nixosModules.btop
         self.nixosModules.fastfetch
+        self.nixosModules.qalc
         self.nixosModules.starship
         self.nixosModules.storage
         self.nixosModules.nautilus
@@ -86,6 +87,7 @@
         self.homeModules.bash
         self.homeModules.wezterm
         self.homeModules.nvim
+        self.homeModules.qalc
         self.homeModules.ssh
         self.homeModules.storage
         self.homeModules.nautilus

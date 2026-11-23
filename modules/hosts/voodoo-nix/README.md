@@ -32,7 +32,7 @@ modules/hosts/voodoo-nix/
   * **Editors & LSPs**: Neovim (Native LSP with `tinymist`, `basedpyright`, `ruff`, `nil`, `lua-ls`), Zed editor integration.
   * **Runtimes & Tools**: Python 3, Docker, Direnv (`nix-direnv`), Git, and Antigravity CLI.
 * **Shell & Terminal**:
-  * Bash with Starship prompt, Bat (`cat` alias), Btop resource monitor, Fastfetch, and declarative SSH configuration.
+  * Bash with Starship prompt, Bat (`cat` alias), Btop resource monitor, Fastfetch, Qalc (`libqalculate` with daily exchange rate timer), and declarative SSH configuration.
 * **Secrets Management**:
   * Declarative secret decryption via `sops-nix` using local Age keys.
 

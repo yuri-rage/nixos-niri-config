@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Calculator (qalc)
+Comment=Interactive scientific and unit-converting calculator
+Exec=wezterm --config enable_tab_bar=false start --class wezterm.calc qalc
+Icon=accessories-calculator
+Terminal=false
+Type=Application
+Categories=Utility;Calculator;
+Keywords=calc;calculator;qalc;math;units;
