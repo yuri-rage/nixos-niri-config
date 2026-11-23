@@ -181,7 +181,7 @@ wezterm.on('open-uri', function(_window, pane, uri)
       line = l_col
       col = c_col
     else
-      local p_range, l_range = path:match('^(.-):(%d+)(?:%-(%d+))?$')
+      local p_range, l_range = path:match('^(.-):(%d+)%-?%d*$')
       if p_range then
         path = p_range
         line = l_range
