@@ -17,7 +17,7 @@
 | **OS** | [NixOS](https://nixos.org/) (Unstable Flake) | Declarative, reproducible system configuration with `nix-ld` FHS binary compatibility |
 | **Compositor** | [Niri](https://github.com/YaLTeR/niri) | Scrollable-tiling Wayland compositor with custom active gradients & floating rules |
 | **Shell & Bar** | [Noctalia](https://github.com/noctalia-dev/noctalia) | Status bar, audio visualizer, media widget, control center, weather, and launcher |
-| **Terminal** | [WezTerm](https://wezfurlong.org/wezterm/) | Fast GPU terminal with tabs, dark theme, tiling (`Mod+T`), and tabless scratchpad (`Mod+S`) |
+| **Terminal** | [WezTerm](https://wezfurlong.org/wezterm/) | Fast GPU terminal with tabs, dark theme, tiling (`Mod+T`), tabless scratchpad (`Mod+S`), and clickable `path:line:col` links that open in Zed |
 | **Editor** | [Neovim](https://neovim.io/) / [Zed](https://zed.dev/) | Lua-based Lazy.nvim setup + Zed editor with `basedpyright`, `ruff`, `nil`, `lua-ls`, `tinymist`, and `nixd` |
 | **Browser** | [Zen Browser](https://zen-browser.app/) | Privacy-focused Gecko browser |
 | **File Manager** | [Nautilus](https://apps.gnome.org/Nautilus/) (GNOME Files) | GTK4/Adwaita file manager with Sushi QuickLook & "Open in WezTerm" integration |
@@ -65,11 +65,11 @@ nixcfg/
 │   │   │   ├── remote/               # Remote access (Tailscale mesh VPN & RustDesk client)
 │   │   │   └── sunshine/             # Sunshine game streaming server, KMS capture, uinput
 │   │   ├── development/              # Developer toolchains & IDEs
-│   │   │   ├── default.nix           # Dev aggregator + antigravity-cli & python3
+│   │   │   ├── default.nix           # Dev aggregator + antigravity-cli, claude-code & python3
 │   │   │   ├── ardupilot/            # ArduPilot completion hook & dev environment
 │   │   │   ├── direnv/               # Direnv & nix-direnv caching
 │   │   │   ├── docker/               # Container virtualization, weekly autoPrune, docker-compose
-│   │   │   ├── git/                  # Git configuration & productivity aliases
+│   │   │   ├── git/                  # Git configuration, productivity aliases & GitHub CLI (gh)
 │   │   │   ├── language-servers/     # LSP binaries (basedpyright, ruff, nil, nixd, etc.)
 │   │   │   ├── nixcfg-tooling/       # Just runner integration, complete-j.sh, 'j' wrapper
 │   │   │   ├── proxmox-remote/       # Remote Proxmox VE admin utilities (pve-update-lxcs)
@@ -171,6 +171,9 @@ sops updatekeys secrets/secrets.yaml
 * `Mod + Q`: Close focused window
 * `Mod + H / J / K / L` or `Arrows`: Focus navigation across columns/windows
 * `Mod + Ctrl + H / J / K / L`: Move column/window position
+* `Mod + Scroll` / `Mod + Ctrl + Scroll`: Focus / move columns left & right
+* `Mod + Shift + Scroll`: Switch workspace up / down
+* `Mod + Numpad 1–9`: Set column width presets (1 = 1/6, 2 = 1/4, 3 = 1/3, 4 = 1/2, 5 = 2/3, 6 = 3/4, 7 = 5/6, 8 = 100%)
 
 ### Noctalia Launcher Providers
 * **`/spot <query>`**: Real-time search across Spotify tracks, albums, and playlists. Press `Enter` to play immediately.

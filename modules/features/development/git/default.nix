@@ -4,6 +4,7 @@
 #
 # provides:
 #   - user: programs.git with aliases and diff/log utilities
+#   - user: programs.gh (GitHub CLI, ssh protocol, git credential helper)
 #
 # required artifacts:
 #   - (none)
@@ -46,6 +47,11 @@
             unstage = "restore --staged";
           };
         };
+      };
+
+      programs.gh = {
+        enable = true;
+        settings.git_protocol = "ssh";
       };
 
       home.shellAliases = {
