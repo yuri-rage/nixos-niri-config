@@ -128,17 +128,20 @@ font_family = "Fira Sans Book"
 builtin = "Tokyo-Night"
 community_palette = "Tomorrow"
 mode = "dark"
-source = "wallpaper"
+source = "community"
 wallpaper_scheme = "m3-tonal-spot"
 
 [wallpaper.default]
-path = "/home/yuri/Pictures/Wallpapers/clockwork-angels-2.webp"
+path = "/home/yuri/Pictures/Wallpapers/starman_circuit_3440x1440.webp"
 
 [wallpaper.last]
-path = "/home/yuri/Pictures/Wallpapers/clockwork-angels-2.webp"
+path = "/home/yuri/Pictures/Wallpapers/starman_circuit_3440x1440.webp"
 
 [wallpaper.monitors.DP-1]
 path = "/home/yuri/Pictures/Wallpapers/clockwork-angels-2.webp"
+
+[wallpaper.monitors.HDMI-A-1]
+path = "/home/yuri/Pictures/Wallpapers/starman_circuit_3440x1440.webp"
 
 [wallpaper.monitors.Virtual-1]
 path = "/home/yuri/Pictures/Wallpapers/clockwork-angels-2.png"
