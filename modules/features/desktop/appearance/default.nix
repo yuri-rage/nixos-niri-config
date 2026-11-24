@@ -3,7 +3,7 @@
 #  fully self-contained desktop theming, fonts, and styling module
 #
 # provides:
-#   - system:  workstation fonts + icon theme packages + dconf service
+#   - system:  workstation fonts + icon theme packages + dconf service + Qt5/Qt6 dark theming
 #   - user:    GTK theme + icon theme + cursor + font scaling + file chooser preferences
 #   - package: material-black-blueberry-suru icon theme
 #
@@ -16,6 +16,12 @@
     { pkgs, ... }:
     {
       programs.dconf.enable = true;
+
+      qt = {
+        enable = true;
+        platformTheme = "gnome";
+        style = "adwaita-dark";
+      };
 
       environment.systemPackages = with pkgs; [
         adwaita-icon-theme
