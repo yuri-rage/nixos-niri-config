@@ -13,7 +13,7 @@
     "Lua": ["luau", "*.luau"],
   },
   "buffer_font_weight": 300.0,
-  "buffer_font_family": "MesloLGS Nerd Font",
+  "buffer_font_family": "JetBrainsMono Nerd Font",
   "terminal": {
     "font_size": 14.0,
     "font_family": "FiraCode Nerd Font",
