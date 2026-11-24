@@ -3,7 +3,7 @@
 #  remote access, mesh networking, and remote desktop tools
 #
 # provides:
-#   - system: tailscale service + firewall rules, rustdesk-flutter desktop client
+#   - system: tailscale service + firewall rules, proton-vpn, rustdesk-flutter desktop client
 #
 # required artifacts:
 #   - (none)
@@ -23,8 +23,9 @@
       # Trust Tailscale interface so tailnet peers can reach host services
       networking.firewall.trustedInterfaces = [ "tailscale0" ];
 
-      # RustDesk Remote Desktop Client (Flutter GUI)
+      # Proton VPN & RustDesk desktop clients
       environment.systemPackages = with pkgs; [
+        proton-vpn
         rustdesk-flutter
       ];
     };
