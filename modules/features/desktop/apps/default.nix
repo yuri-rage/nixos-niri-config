@@ -1,9 +1,9 @@
 # apps Nix flake
 #
-#  desktop applications and custom launcher entries
+#  desktop applications, AppImage runtime support, and custom launcher entries
 #
 # provides:
-#   - system: gimp-with-plugins, kdenlive, obsidian, vesktop, zen-browser
+#   - system: gimp-with-plugins, kdenlive, obsidian, vesktop, zen-browser, programs.appimage (appimage-run + binfmt)
 #   - user:   custom desktop launcher entries
 #
 # required artifacts:
@@ -14,6 +14,11 @@
   flake.nixosModules.apps =
     { pkgs, ... }:
     {
+      programs.appimage = {
+        enable = true;
+        binfmt = true;
+      };
+
       environment.systemPackages = with pkgs; [
         gimp-with-plugins
         kdePackages.kdenlive
