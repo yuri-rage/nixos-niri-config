@@ -125,7 +125,7 @@
       "args": [
         "mcp"
       ],
-      "command": "/home/yuri/.cache/appimage-run/f3afd0df54df5cfba281fe0d2b0476f87f154606464bd21b0094226063505d88/usr/bin/solidcraft-cli"
+      "command": "/nix/store/3l2pyys3rb41g6nmilyrqprg35y7kz8g-solidcraft-latest-extracted/usr/bin/solidcraft-cli"
     }
   },
 }

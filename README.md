@@ -57,7 +57,7 @@ nixcfg/
 │   │   ├── secrets/                  # Sops-nix declarative secret decryption module
 │   │   ├── desktop/                  # Workstation GUI modules
 │   │   │   ├── appearance/           # GTK theme, cursor, font scaling, icon packages
-│   │   │   ├── apps/                 # Graphical user packages (Zen Browser, AppImage support, etc.)
+│   │   │   ├── apps/                 # Graphical user packages (Zen Browser, SolidCraft, AppImage support, etc.)
 │   │   │   ├── wezterm/              # WezTerm terminal config (package ships Nautilus "Open in WezTerm")
 │   │   │   ├── nautilus/             # Nautilus file manager, sushi preview, dconf settings
 │   │   │   ├── niri/                 # Niri compositor, greetd auto-login, config.kdl

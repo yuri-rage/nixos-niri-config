@@ -149,8 +149,21 @@
         "nixos-wsl": "nixos-wsl",
         "nixpkgs": "nixpkgs",
         "noctalia": "noctalia",
+        "solidcraft-appimage": "solidcraft-appimage",
         "sops-nix": "sops-nix",
         "zen-browser": "zen-browser"
+      }
+    },
+    "solidcraft-appimage": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-xn9XghCdFCUQBGUYn+EcpQZeDQtS+lmUVUueEenoVuw=",
+        "type": "file",
+        "url": "https://github.com/tangency-labs/solidcraft/releases/latest/download/solidcraft-linux-x86_64.AppImage"
+      },
+      "original": {
+        "type": "file",
+        "url": "https://github.com/tangency-labs/solidcraft/releases/latest/download/solidcraft-linux-x86_64.AppImage"
       }
     },
     "sops-nix": {
