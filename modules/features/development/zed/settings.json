@@ -125,7 +125,7 @@
       "args": [
         "mcp"
       ],
-      "command": "/nix/store/3l2pyys3rb41g6nmilyrqprg35y7kz8g-solidcraft-latest-extracted/usr/bin/solidcraft-cli"
+      "command": "solidcraft-cli"
     }
   },
 }

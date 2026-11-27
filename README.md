@@ -66,7 +66,7 @@ nixcfg/
 │   │   │   └── sunshine/             # Sunshine game streaming server, KMS capture, uinput
 │   │   ├── development/              # Developer toolchains & IDEs
 │   │   │   ├── default.nix           # Dev aggregator + antigravity-cli, claude-code & python3
-│   │   │   ├── ardupilot/            # ArduPilot completion hook & dev environment
+│   │   │   ├── ardupilot/            # ArduPilot completion hook, dev environment & MAVLink UDP 14550 firewall rule
 │   │   │   ├── direnv/               # Direnv & nix-direnv caching
 │   │   │   ├── docker/               # Container virtualization, weekly autoPrune, docker-compose
 │   │   │   ├── git/                  # Git configuration, productivity aliases & GitHub CLI (gh)
